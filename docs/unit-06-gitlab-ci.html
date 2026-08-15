@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>單元 6 · GitLab CI/CD · GitLab 繁中教學站</title>
+<meta name="description" content="GitLab CI/CD：.gitlab-ci.yml、Runners、Pipeline、stages。">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>單元 6 · GitLab CI/CD</h1>
+  <p class="subtitle">內建 pipeline 自動化 — GitLab CI/CD</p>
+</header>
+
+<nav class="topnav">
+  <a href="../index.html">首頁</a>
+  <a href="../map.html">概念地圖</a>
+  <a href="../learning-path.html">學習路線</a>
+  <a href="index.html">單元教學</a>
+  <a href="../about.html">關於</a>
+</nav>
+
+<div class="back-link"><a href="index.html">← 單元教學</a></div>
+
+<div class="guide">
+
+  <div class="callout">
+    <strong>GitLab 的招牌：</strong>CI/CD 是<strong>內建</strong>的，不必另找服務——
+    寫一個 <code>.gitlab-ci.yml</code>，push 就自動跑測試、建置、部署。
+  </div>
+
+  <h2>核心概念 · Core Concepts</h2>
+  <table>
+    <tr><th>名詞</th><th>意義</th></tr>
+    <tr><td><strong>Pipeline</strong></td><td>一次完整的 CI/CD 流程（由 stages 組成）</td></tr>
+    <tr><td><strong>Stage</strong></td><td>流程階段（build → test → deploy），依序執行</td></tr>
+    <tr><td><strong>Job</strong></td><td>實際執行的任務，屬於某個 stage</td></tr>
+    <tr><td><strong>Runner</strong></td><td>執行 job 的機器（可自架/共享）</td></tr>
+    <tr><td><strong>Artifact</strong></td><td>job 產出物（可傳給下一 stage）</td></tr>
+    <tr><td><strong>Variable</strong></td><td>環境變數（含 CI/CD variables，類似 secrets）</td></tr>
+  </table>
+
+  <h2>第一個 .gitlab-ci.yml</h2>
+  <p>放在專案根目錄：</p>
+  <div class="demo-block">
+    <div class="demo-label">.gitlab-ci.yml</div>
+    <pre><span class="hl-k">stages</span>:
+  <span class="hl-p">-</span> <span class="hl-s">test</span>
+  <span class="hl-p">-</span> <span class="hl-s">deploy</span>
+
+<span class="hl-k">test-job</span>:
+  <span class="hl-k">stage</span>: <span class="hl-s">test</span>
+  <span class="hl-k">image</span>: <span class="hl-s">node:20</span>
+  <span class="hl-k">script</span>:
+    <span class="hl-p">-</span> <span class="hl-s">npm ci</span>
+    <span class="hl-p">-</span> <span class="hl-s">npm test</span>
+
+<span class="hl-k">deploy-job</span>:
+  <span class="hl-k">stage</span>: <span class="hl-s">deploy</span>
+  <span class="hl-k">script</span>:
+    <span class="hl-p">-</span> <span class="hl-s">echo "deploying"</span>
+  <span class="hl-k">only</span>:
+    <span class="hl-p">-</span> <span class="hl-s">main</span></pre>
+  </div>
+  <div class="callout info">
+    <strong>解讀：</strong>push 後 GitLab 建一個 pipeline → test 階段先跑（node 映像環境執行
+    npm ci / npm test）→ 只有 main 分支才跑 deploy 階段。任一 job 失敗，pipeline 變紅。
+  </div>
+
+  <h2>Runners · 執行機器</h2>
+  <p>
+    GitLab CI 需要 <strong>Runner</strong> 執行 job。GitLab.com 提供共享 runner（免費額度），
+    自架 GitLab 則要自己裝 runner（在公司的機器上跑，程式碼不出公司）。
+  </p>
+  <div class="demo-block">
+    <div class="demo-label">Runner 類型 · RUNNERS</div>
+    <pre>Shared runners   <span class="hl-c"># GitLab.com 提供，免費額度有限</span>
+Specific runners <span class="hl-c"># 專屬機器，可指定標籤</span>
+Group runners    <span class="hl-c"># 整個群組共用</span>
+
+gitlab-runner register   <span class="hl-c"># 註冊一台 runner</span></pre>
+  </div>
+
+  <h2>Variables 與 Secrets</h2>
+  <p>機密值用 <strong>CI/CD variables</strong>（Settings → CI/CD → Variables），不寫進 YAML。</p>
+  <div class="demo-block">
+    <div class="demo-label">使用變數 · VARIABLES</div>
+    <pre><span class="hl-c"># 設定：Settings → CI/CD → Variables → 新增</span>
+<span class="hl-c"># 名稱：DEPLOY_TOKEN</span>
+
+<span class="hl-k">deploy-job</span>:
+  <span class="hl-k">script</span>:
+    <span class="hl-p">-</span> <span class="hl-s">echo "using $DEPLOY_TOKEN"</span>  <span class="hl-c"># 不要 echo 機密！</span>
+  <span class="hl-k">rules</span>:
+    <span class="hl-p">-</span> <span class="hl-k">if</span>: <span class="hl-s">'$CI_COMMIT_BRANCH == "main"'</span></pre>
+  </div>
+  <div class="callout warn">
+    <strong>內建變數：</strong>GitLab 提供大量 <code>CI_*</code> 內建變數（分支、commit、MR 資訊）。
+    <code>rules: if</code> 可用它們做條件控制。機密變數記得勾選「Masked」。
+  </div>
+
+  <h2>Job 的其他常用欄位</h2>
+  <div class="demo-block">
+    <div class="demo-label">常用欄位 · KEYWORDS</div>
+    <pre><span class="hl-k">image</span>: <span class="hl-s">python:3.12</span>       <span class="hl-c"># 執行環境</span>
+<span class="hl-k">before_script</span>: <span class="hl-p">[</span><span class="hl-s">pip install -r req.txt</span><span class="hl-p">]</span>   <span class="hl-c"># job 前</span>
+<span class="hl-k">artifacts</span>:
+  <span class="hl-k">paths</span>: <span class="hl-p">[</span>dist/<span class="hl-p">]</span>      <span class="hl-c"># 產出物傳給下一 stage</span>
+<span class="hl-k">cache</span>:
+  <span class="hl-k">paths</span>: <span class="hl-p">[</span>.npm/<span class="hl-p">]</span>       <span class="hl-c"># 快取加速</span>
+<span class="hl-k">when</span>: <span class="hl-s">on_success</span>       <span class="hl-c"># 失敗也跑：always</span>
+<span class="hl-k">needs</span>: <span class="hl-p">[</span>test-job<span class="hl-p">]</span>  <span class="hl-c"># 跳過 stage 順序直接依賴</span></pre>
+  </div>
+
+  <h2>把 CI 接上 MR 門檻</h2>
+  <p>在 MR 上，pipeline 結果會顯示（✔ / ✘）。結合保護分支設定「Pipelines must succeed」，
+  CI 沒過就不能合併——品質第一道防線。</p>
+
+  <div class="outcome">
+    <strong>看完這頁你應該能說出：</strong>
+    <ul>
+      <li>Pipeline / Stage / Job / Runner 的關係。</li>
+      <li>寫一份最小的 .gitlab-ci.yml。</li>
+      <li>Runner 的角色與自架 CI 的意義。</li>
+      <li>Variables 與內建 CI_* 變數的用法。</li>
+      <li>如何用 pipeline 當合併門檻。</li>
+    </ul>
+  </div>
+
+  <h2>延伸閱讀</h2>
+  <ul>
+    <li>下一篇：<a href="unit-07-gitlab-pages.html">單元 7 · GitLab Pages</a>。</li>
+    <li><a href="https://docs.gitlab.com/ee/ci/" rel="noopener">GitLab Docs: CI/CD</a></li>
+  </ul>
+
+  <div class="next-prev">
+    <a href="unit-05-issues-boards.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 5 · Issues 與專案管理</div></a>
+    <a class="np-next" href="unit-07-gitlab-pages.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 7 · GitLab Pages</div></a>
+  </div>
+</div>
+
+<footer>
+  這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
+  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span>
+</footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitLab 繁中教學站 · gitlab-tech-zh-tw</title>
+<meta name="description" content="把 GitLab 從平台概念到與 GitHub 的詳細比較做成中英對照的分層教學網站。">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>GitLab 繁體中文教學站</h1>
+  <p class="subtitle">從第一個專案到與 GitHub 的詳細比較</p>
+  <p class="badge-line">8 單元 · 含 GitLab vs GitHub 比較專章 · 內容 CC-BY-4.0</p>
+  <p class="tagline">
+    <strong>GitLab</strong> 是少數能「完全自架」的 DevOps 平台——程式碼、CI/CD、容器庫、
+    Pages、專案管理一體化。本站在「GitHub 之外的另一個世界」視角下，
+    帶你認識 GitLab，並用一整章詳細比較它與 GitHub。
+  </p>
+</header>
+
+<nav class="topnav">
+  <a href="index.html">首頁</a>
+  <a href="map.html">概念地圖</a>
+  <a href="learning-path.html">學習路線</a>
+  <a href="docs/index.html">單元教學</a>
+  <a href="about.html">關於</a>
+</nav>
+
+<div class="entry-cards">
+  <a class="entry-card" href="map.html">
+    <div class="ec-icon">🕸️</div>
+    <div class="ec-title">概念地圖</div>
+    <div class="ec-en">Concept Map</div>
+    <div class="ec-desc">GitLab 平台功能全景圖——專案、MR、CI/CD、Pages 與一體化 DevOps。</div>
+    <div class="ec-pill"><span class="c-tag">功能總覽</span><span class="c-tag">一圖看懂</span></div>
+  </a>
+  <a class="entry-card" href="learning-path.html">
+    <div class="ec-icon">🧗</div>
+    <div class="ec-title">學習路線</div>
+    <div class="ec-en">Learning Path</div>
+    <div class="ec-desc">從認識到比較的分層路線：L0 認識 → L1 上手 → L2 協作 → L3 DevOps → L4 比較。</div>
+    <div class="ec-pill"><span class="c-tag">五層路線</span><span class="c-tag">循序漸進</span></div>
+  </a>
+  <a class="entry-card" href="docs/index.html">
+    <div class="ec-icon">📚</div>
+    <div class="ec-title">單元教學</div>
+    <div class="ec-en">Lessons</div>
+    <div class="ec-desc">8 個單元循序漸進：專案、MR、Issues、CI/CD、Pages 與比較專章。</div>
+    <div class="ec-pill"><span class="c-tag">8 單元</span><span class="c-tag">中英對照</span></div>
+  </a>
+  <a class="entry-card" href="about.html">
+    <div class="ec-icon">📝</div>
+    <div class="ec-title">關於本站</div>
+    <div class="ec-en">About</div>
+    <div class="ec-desc">網站緣起、授權方式與建置方式。</div>
+    <div class="ec-pill"><span class="c-tag">授權</span><span class="c-tag">建置</span></div>
+  </a>
+</div>
+
+<div class="guide" style="margin-top:2.6rem;">
+  <h2>為什麼學 GitLab？</h2>
+  <p>
+    你八成用過 GitHub——而 GitLab 是它的「另一種答案」：把版本控制、CI/CD、容器登錄庫、
+    監控、Pages、Wiki 全部<strong>內建在一個產品</strong>，而且可以<strong>自架在自家伺服器</strong>。
+    學會 GitLab，等於學會「完整的 DevOps 平台該長什麼樣」。
+  </p>
+  <p>
+    這站也特別安排了一章<strong>詳細比較</strong>：術語差異、託管模式、CI/CD 設計哲學、
+    開源程度與價格——讓你在 GitHub 與 GitLab 之間做出知情選擇。
+  </p>
+
+  <h2>立即體驗：GitLab 術語 vs GitHub 術語</h2>
+  <div class="demo-grid">
+    <div class="demo-block">
+      <div class="demo-label">GitHub · 你可能已熟悉</div>
+      <pre>Repository（repo）
+Pull Request（PR）
+Organization
+GitHub Actions</pre>
+    </div>
+    <div class="demo-block">
+      <div class="demo-label">GitLab · 對應術語</div>
+      <pre>Project（專案）
+Merge Request（MR）
+Group（群組）
+GitLab CI/CD</pre>
+    </div>
+  </div>
+  <div class="callout">
+    <strong>一句話：</strong>GitLab 的「Merge Request」就是 GitHub 的「Pull Request」——
+    概念相同，名字不同。完整對照見<a href="docs/unit-08-gitlab-vs-github.html">單元 8</a>。
+  </div>
+</div>
+
+<footer>
+  這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
+  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span>
+</footer>
+
+</div>
+</body>
+</html>

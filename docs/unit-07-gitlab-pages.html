@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>單元 7 · GitLab Pages · GitLab 繁中教學站</title>
+<meta name="description" content="GitLab Pages：靜態網站部署。">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>單元 7 · GitLab Pages</h1>
+  <p class="subtitle">內建靜態網站部署 — GitLab Pages</p>
+</header>
+
+<nav class="topnav">
+  <a href="../index.html">首頁</a>
+  <a href="../map.html">概念地圖</a>
+  <a href="../learning-path.html">學習路線</a>
+  <a href="index.html">單元教學</a>
+  <a href="../about.html">關於</a>
+</nav>
+
+<div class="back-link"><a href="index.html">← 單元教學</a></div>
+
+<div class="guide">
+
+  <div class="callout">
+    <strong>和 GitHub Pages 一樣：</strong>用 repo（專案）裡的靜態檔直接變成網站——
+    但 GitLab Pages 的部署<strong>由 CI/CD 驅動</strong>，寫法稍有不同。
+  </div>
+
+  <h2>URL 格式 · URLs</h2>
+  <div class="demo-block">
+    <div class="demo-label">部署後的網址 · URLS</div>
+    <pre>GitLab.com:  https://USER.gitlab.io/PROJECT/
+自架：        https://pages.example.com/PROJECT/
+個人/群組頁： https://USER.gitlab.io/  （專案名 = USER.gitlab.io）</pre>
+  </div>
+
+  <h2>啟用 Pages · 用 CI 部署</h2>
+  <p>GitLab Pages 需要一個<strong>特殊 job</strong>：`pages`，stage 固定 <code>deploy</code>，並把網站內容放進 <code>public/</code>。</p>
+  <div class="demo-block">
+    <div class="demo-label">.gitlab-ci.yml · 靜態站</div>
+    <pre><span class="hl-k">pages</span>:
+  <span class="hl-k">stage</span>: <span class="hl-s">deploy</span>
+  <span class="hl-k">script</span>:
+    <span class="hl-p">-</span> <span class="hl-s">mkdir -p public</span>
+    <span class="hl-p">-</span> <span class="hl-s">cp -r index.html assets public/</span>
+  <span class="hl-k">artifacts</span>:
+    <span class="hl-k">paths</span>:
+      <span class="hl-p">-</span> <span class="hl-s">public</span>
+  <span class="hl-k">only</span>:
+    <span class="hl-p">-</span> <span class="hl-s">main</span></pre>
+  </div>
+  <div class="callout info">
+    <strong>三步驟：</strong>（1）job 名叫 <code>pages</code>；（2）把網站檔複製進 <code>public/</code>；
+    （3）用 <code>artifacts</code> 傳出 <code>public</code>。合併/push 後 GitLab 自動發布。
+  </div>
+
+  <h2>需要建置的專案（框架）</h2>
+  <p>用 Node 建置工具時，在 job 裡先 build 再搬進 public：</p>
+  <div class="demo-block">
+    <div class="demo-label">.gitlab-ci.yml · Vite/Astro 範例</div>
+    <pre><span class="hl-k">pages</span>:
+  <span class="hl-k">stage</span>: <span class="hl-s">deploy</span>
+  <span class="hl-k">image</span>: <span class="hl-s">node:20</span>
+  <span class="hl-k">script</span>:
+    <span class="hl-p">-</span> <span class="hl-s">npm ci</span>
+    <span class="hl-p">-</span> <span class="hl-s">npm run build</span>
+    <span class="hl-p">-</span> <span class="hl-s">cp -r dist public</span>
+  <span class="hl-k">artifacts</span>:
+    <span class="hl-k">paths</span>: <span class="hl-p">[</span>public<span class="hl-p">]</span></pre>
+  </div>
+
+  <h2>Pages 設定 · 自訂網域</h2>
+  <p>在「Deploy → Pages」頁可設定：</p>
+  <ul>
+    <li>暴露的<strong>副路徑</strong>（access control，可設誰能看）。</li>
+    <li><strong>自訂網域</strong>（CNAME）與 SSL。</li>
+    <li>是否對外公開。</li>
+  </ul>
+  <div class="callout warn">
+    <strong>與 GitHub 的差異：</strong>GitHub Pages 的「Deploy from branch」一鍵搞定；
+    GitLab Pages 一定透過 CI job（<code>pages</code>）——多一個步驟，但也更靈活（可內嵌建置流程）。
+  </div>
+
+  <h2>限制 · Limits</h2>
+  <table>
+    <tr><th>項目</th><th>限制</th></tr>
+    <tr><td>內容</td><td>靜態檔案（無後端）</td></tr>
+    <tr><td>大小</td><td>每個 Pages 站有一定上限（視方案）</td></tr>
+    <tr><td>流量</td><td>免費方案有流量與建置分鐘上限</td></tr>
+    <tr><td>權限</td><td>可設只有專案成員能看（GitHub 沒有）</td></tr>
+  </table>
+
+  <div class="outcome">
+    <strong>看完這頁你應該能說出：</strong>
+    <ul>
+      <li>GitLab Pages 的網址格式。</li>
+      <li>用 <code>pages</code> job + public/ 部署的流程。</li>
+      <li>框架專案如何 build 後再部署。</li>
+      <li>與 GitHub Pages 的主要差異。</li>
+    </ul>
+  </div>
+
+  <h2>延伸閱讀</h2>
+  <ul>
+    <li>下一篇：<a href="unit-08-gitlab-vs-github.html">單元 8 · GitLab vs GitHub</a>——詳細比較。</li>
+    <li><a href="https://docs.gitlab.com/ee/user/project/pages/" rel="noopener">GitLab Docs: Pages</a></li>
+  </ul>
+
+  <div class="next-prev">
+    <a href="unit-06-gitlab-ci.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 6 · GitLab CI/CD</div></a>
+    <a class="np-next" href="unit-08-gitlab-vs-github.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 8 · GitLab vs GitHub</div></a>
+  </div>
+</div>
+
+<footer>
+  這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
+  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span>
+</footer>
+
+</div>
+</body>
+</html>

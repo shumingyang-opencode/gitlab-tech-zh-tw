@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>單元 4 · Merge Request 協作 · GitLab 繁中教學站</title>
+<meta name="description" content="GitLab Merge Request 協作：MR 流程、Approvals、code review、保護分支。">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>單元 4 · Merge Request 協作</h1>
+  <p class="subtitle">審查、批准與保護 — MR Collaboration</p>
+</header>
+
+<nav class="topnav">
+  <a href="../index.html">首頁</a>
+  <a href="../map.html">概念地圖</a>
+  <a href="../learning-path.html">學習路線</a>
+  <a href="index.html">單元教學</a>
+  <a href="../about.html">關於</a>
+</nav>
+
+<div class="back-link"><a href="index.html">← 單元教學</a></div>
+
+<div class="guide">
+
+  <p>
+    把 MR 變成「有審查、有批准、有門檻」的合併流程，是 GitLab 的強項——
+    尤其 <strong>Merge Request Approvals</strong> 是它比 GitHub 更早內建、也更有彈性的功能。
+  </p>
+
+  <h2>MR 頁面長什麼樣</h2>
+  <div class="demo-block">
+    <div class="demo-label">MR 頁面 · LAYOUT</div>
+    <pre>┌──────────────────────────────────────┐
+│ !12 修正登入頁       Open · 3 commits │
+├──────────────────────────────────────┤
+│ Overview   Commits   Changes   Pipelines │
+│  └─ 描述（Closes #12）                │
+│  └─ Reviewers / Assignees             │
+│  └─ CI 狀態：✔ Pipeline passed        │
+│  └─ Approval：✔ Approved by 2 人     │
+│  └─ [Merge]（條件滿足才亮）            │
+└──────────────────────────────────────┘</pre>
+  </div>
+  <div class="callout">
+    <strong>和 PR 的關鍵差異：</strong>GitLab 的 MR 頁有「Pipelines」分頁（CI 結果內嵌）、
+    「Approvals」區塊（批准計數）——審查與自動化在<strong>同一頁</strong>整合。
+  </div>
+
+  <h2>Code Review · 程式碼審查</h2>
+  <p>「Changes」分頁逐行檢視；GitLab 的 review 流程：</p>
+  <ol>
+    <li>在 Changes 分頁點行號旁的「+」留言（可附<strong>建議修正 snippet</strong>）。</li>
+    <li>可以「Start a review」：先累積意見，最後一起送出。</li>
+    <li>作者修正後 push，新 commit 自動進同一 MR。</li>
+  </ol>
+  <div class="callout info">
+    <strong>特色：</strong>GitLab 支援「<strong>resolve thread</strong>」——把已解決的討論標示完成，
+    比 GitHub 的留言更接近「可追蹤的討論狀態」。
+  </div>
+
+  <h2>Merge Request Approvals · 批准機制</h2>
+  <p>
+    Approvals 規定「<strong>要幾個特定角色批准才能合併</strong>」——GitLab 最早內建此功能，且規則很細。
+  </p>
+  <div class="demo-block">
+    <div class="demo-label">Approval rules · 範例規則</div>
+    <pre>專案 → Settings → Merge requests → Approval rules
+├── 需要 2 個批准才能合併
+├── 特定檔案（如 src/payments/）必須資深者批准
+└── 批准人不能是自己（code owner 例外）</pre>
+  </div>
+  <div class="callout warn">
+    <strong>GitLab 的細緻之處：</strong>可以針對「某些路徑」設不同批准人——
+    例如改到金流相關程式碼，必須 CTO 批准。GitHub 需付費或靠第三方才做得到類似效果。
+  </div>
+
+  <h2>保護分支 · Protected Branches</h2>
+  <p>與 GitHub 概念相同：防止直接 push 主分支、強制 MR 流程。</p>
+  <div class="demo-block">
+    <div class="demo-label">設定 · SETTINGS</div>
+    <pre>專案 → Settings → Repository → Protected branches
+├── 主分支（main）
+├── Allowed to merge：只有維護者
+└── 結合 CI + Approvals 才能合併</pre>
+  </div>
+
+  <h2>合併方式 · Merge Methods</h2>
+  <table>
+    <tr><th>方式</th><th>效果</th></tr>
+    <tr><td><strong>Merge commit</strong></td><td>保留全部 commit + 合併事件</td></tr>
+    <tr><td><strong>Squash commits</strong></td><td>壓成一個 commit（對應 GitHub 的 squash）</td></tr>
+    <tr><td><strong>Rebase merge</strong></td><td>線性重放，無合併事件</td></tr>
+  </table>
+  <p class="hint">另外 GitLab 有「Merge train」：排隊依序合併，避免互相踩線（企業功能）。</p>
+
+  <div class="outcome">
+    <strong>看完這頁你應該能說出：</strong>
+    <ul>
+      <li>MR 頁面如何整合 CI、Approvals 與 Review。</li>
+      <li>Approvals 的規則設定與它比 GitHub 靈活之處。</li>
+      <li>保護分支設定。</li>
+      <li>三種合併方式。</li>
+    </ul>
+  </div>
+
+  <h2>延伸閱讀</h2>
+  <ul>
+    <li>下一篇：<a href="unit-05-issues-boards.html">單元 5 · Issues 與專案管理</a>。</li>
+    <li><a href="https://docs.gitlab.com/ee/user/project/merge_requests/approvals/" rel="noopener">GitLab Docs: Merge request approvals</a></li>
+  </ul>
+
+  <div class="next-prev">
+    <a href="unit-03-branches-mr.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 3 · 分支與 Merge Request</div></a>
+    <a class="np-next" href="unit-05-issues-boards.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 5 · Issues 與專案管理</div></a>
+  </div>
+</div>
+
+<footer>
+  這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
+  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span>
+</footer>
+
+</div>
+</body>
+</html>
