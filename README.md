@@ -46,3 +46,7 @@ python3 -m http.server 8000
 ## 授權
 
 本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；文中技術名詞與操作引用自 GitLab Docs 與 Git 官方文件。
+
+## 相關連結
+
+- 學習路徑建議服務：[learning-path-advisor](https://shuming-yang.github.io/learning-path-advisor/) — 依角色推薦教學網站學習路徑
