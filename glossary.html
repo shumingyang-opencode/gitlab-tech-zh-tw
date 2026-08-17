@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>術語表 · GitLab 繁體中文教學站</title>
+<meta name="description" content="GitLab 術語表">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div class="container">
+<header>
+  <h1>術語表</h1>
+  <p class="subtitle">全站 GitLab 術語速查</p>
+</header>
+<nav class="topnav">
+  <a href="index.html">首頁</a>
+  <a href="map.html">概念地圖</a>
+  <a href="learning-path.html">學習路線</a>
+  <a href="docs/index.html">單元教學</a>
+  <a href="glossary.html">術語表</a>
+  <a href="about.html">關於</a>
+</nav><div class="back-link"><a href="index.html">← 回首頁</a></div>
+<div class="guide">
+  <div class="callout info"><strong>術語中英對照——GitLab vs GitHub 一次看懂</strong></div>
+<h2>核心概念</h2>
+<table><tr><th>名稱</th><th>英文</th><th>說明</th><th>單元</th></tr>
+<tr><td><strong>GitLab</strong></td><td>GitLab</td><td>一體化 DevOps 平台，可雲端（.com）也可自架</td><td>單元 1</td></tr><tr><td><strong>專案</strong></td><td>Project</td><td>GitLab 的程式碼容器（= GitHub 的 Repository），含 Issues/CI/Pages</td><td>單元 2</td></tr><tr><td><strong>群組</strong></td><td>Group</td><td>組織多個專案、集中管理權限（= GitHub 的 Organization）</td><td>單元 2</td></tr><tr><td><strong>子群組</strong></td><td>Subgroup</td><td>群組可巢狀，組成組織樹（GitHub 無對等）</td><td>單元 2</td></tr><tr><td><strong>可見性</strong></td><td>Visibility</td><td>Private / Internal / Public 三種專案可見層級</td><td>單元 2</td></tr><tr><td><strong>存取權杖</strong></td><td>Personal Access Token (PAT)</td><td>HTTPS 認證用的密鑰，可設 scope 與期限</td><td>單元 1</td></tr><tr><td><strong>合併請求</strong></td><td>Merge Request (MR)</td><td>GitLab 的 PR——請求把分支合併並接受審查</td><td>單元 3</td></tr><tr><td><strong>衝突</strong></td><td>Conflict</td><td>兩邊改了同一行導致無法自動合併</td><td>單元 3</td></tr>
+</table>
+<h2>協作與審查</h2>
+<table><tr><th>名稱</th><th>英文</th><th>說明</th><th>單元</th></tr>
+<tr><td><strong>分支</strong></td><td>Branch</td><td>各自複製一條工作線，完成後合併回 main</td><td>單元 3</td></tr><tr><td><strong>程式碼審查</strong></td><td>Code Review</td><td>在 MR 的 Changes 分頁逐行留言與建議</td><td>單元 4</td></tr><tr><td><strong>討論串</strong></td><td>Thread</td><td>MR 上的留言串，可標記 Resolve 為已解決</td><td>單元 4</td></tr><tr><td><strong>批准規則</strong></td><td>Approval Rules</td><td>規定要幾個（特定）人批准才能合併</td><td>單元 4</td></tr><tr><td><strong>保護分支</strong></td><td>Protected Branch</td><td>禁止直接 push 主分支、強制走 MR</td><td>單元 4</td></tr><tr><td><strong>合併提交</strong></td><td>Merge Commit</td><td>保留全部 commit + 合併節點</td><td>單元 4</td></tr><tr><td><strong>壓縮提交</strong></td><td>Squash</td><td>把 MR 的全部 commit 壓成一個</td><td>單元 4</td></tr><tr><td><strong>變基</strong></td><td>Rebase</td><td>線性重放 commit，歷史無合併節點</td><td>單元 4</td></tr><tr><td><strong>合併列車</strong></td><td>Merge Train</td><td>多顆 MR 排隊依序合併並互測相容性</td><td>單元 4</td></tr>
+</table>
+<h2>CI/CD</h2>
+<table><tr><th>名稱</th><th>英文</th><th>說明</th><th>單元</th></tr>
+<tr><td><strong>管線</strong></td><td>Pipeline</td><td>一次完整的 CI/CD 流程，由 stages 組成</td><td>單元 6</td></tr><tr><td><strong>階段</strong></td><td>Stage</td><td>流程階段（build/test/deploy），依序執行</td><td>單元 6</td></tr><tr><td><strong>任務</strong></td><td>Job</td><td>實際執行的任務，屬於某個 stage</td><td>單元 6</td></tr><tr><td><strong>執行器</strong></td><td>Runner</td><td>執行 job 的機器（共享/群組/特定）</td><td>單元 6</td></tr><tr><td><strong>產出物</strong></td><td>Artifact</td><td>job 產出，可傳給下一 stage 或供人下載</td><td>單元 6</td></tr><tr><td><strong>快取</strong></td><td>Cache</td><td>加速依賴安裝的可重用資料</td><td>單元 6</td></tr><tr><td><strong>變數</strong></td><td>Variable</td><td>環境變數；機密放 CI/CD Variables 並 Mask</td><td>單元 6</td></tr><tr><td><strong>手動任務</strong></td><td>Manual Job</td><td>when: manual，需人按鈕才執行（如部署正式）</td><td>單元 6</td></tr>
+</table>
+<h2>專案管理</h2>
+<table><tr><th>名稱</th><th>英文</th><th>說明</th><th>單元</th></tr>
+<tr><td><strong>議題</strong></td><td>Issue</td><td>任務或 bug 的追蹤單，有編號、可指派</td><td>單元 5</td></tr><tr><td><strong>標籤</strong></td><td>Label</td><td>分類 issue/MR；scoped labels 用 type::/priority::</td><td>單元 5</td></tr><tr><td><strong>里程碑</strong></td><td>Milestone</td><td>把 issue 與 MR 歸到一個版本目標並追蹤進度</td><td>單元 5</td></tr><tr><td><strong>看板</strong></td><td>Issue Board</td><td>Kanban 看板，欄位由 label 對應</td><td>單元 5</td></tr><tr><td><strong>工作量</strong></td><td>Weight</td><td>issue 的相對工作量估算</td><td>單元 5</td></tr><tr><td><strong>史詩</strong></td><td>Epic</td><td>群組層級的大目標，底下掛多個 issue</td><td>單元 5</td></tr><tr><td><strong>靜態網站</strong></td><td>GitLab Pages</td><td>用 CI 的 pages job 把靜態檔發布成網站</td><td>單元 7</td></tr><tr><td><strong>自訂網域</strong></td><td>Custom Domain</td><td>用 CNAME + Let's Encrypt 綁自己的網址</td><td>單元 7</td></tr>
+</table>
+</div><footer>這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
+  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>
+</div></body></html>

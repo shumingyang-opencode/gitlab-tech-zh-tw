@@ -3,132 +3,157 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>單元 2 · 第一個專案 · GitLab 繁中教學站</title>
-<meta name="description" content="GitLab 第一個專案：Project/Group、clone/push、README。">
+<title>單元 2 · 第一個專案 · GitLab 繁體中文教學站</title>
+<meta name="description" content="Project/Group/Subgroup、建立/clone/push、visibility、權限角色">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
 <link rel="stylesheet" href="../assets/site.css">
 </head>
 <body>
 <div class="container">
-
 <header>
   <h1>單元 2 · 第一個專案</h1>
-  <p class="subtitle">建立、複製、提交、上傳 — Your First Project</p>
+  <p class="subtitle">建立、clone、push、Group 群組</p>
 </header>
-
 <nav class="topnav">
   <a href="../index.html">首頁</a>
   <a href="../map.html">概念地圖</a>
   <a href="../learning-path.html">學習路線</a>
-  <a href="index.html">單元教學</a>
+  <a href="../docs/index.html">單元教學</a>
+  <a href="../glossary.html">術語表</a>
   <a href="../about.html">關於</a>
-</nav>
-
-<div class="back-link"><a href="index.html">← 單元教學</a></div>
-
+</nav><div class="back-link"><a href="index.html">← 單元教學</a></div>
 <div class="guide">
+<h2>2.1 術語先導：Project / Group / Subgroup</h2>
+<p>GitLab 不用「Repository」，改用<strong>專案（Project）</strong>與<strong>群組（Group）</strong>：
+</p>
+<table>
+<tr><th>GitLab 術語</th><th>GitHub 對應</th><th>說明</th></tr>
+<tr><td><strong>Project</strong>（專案）</td><td>Repository</td><td>程式碼＋Issues＋CI＋Pages 的容器</td></tr>
+<tr><td><strong>Group</strong>（群組）</td><td>Organization</td><td>組織多個專案、集中管理權限與共用 Runner</td></tr>
+<tr><td><strong>Subgroup</strong>（子群組）</td><td>—（GitHub 無對等）</td><td>群組可巢狀，做出組織樹</td></tr>
+<tr><td><strong>Namespace</strong>（命名空間）</td><td>owner 名</td><td>專案路徑的第一段：group/project 或 user/project</td></tr>
+</table>
+<div class="callout"><strong>為什麼叫 Project：</strong>GitLab 認為專案不只是「程式碼」——
+還含 Issues、CI/CD、容器庫、Pages，所以叫專案比叫 repo 更貼近它「完整產品單位」的定位。</div>
+<div class="callout info"><strong>路徑解讀：</strong>網址 <code>gitlab.com/team-ai/backend/api-gw</code> 中，
+<code>team-ai</code> 是 Group，<code>backend</code> 是 Subgroup，<code>api-gw</code> 才是 Project。</div>
 
-  <h2>術語先導：Project 與 Group</h2>
-  <p>GitLab 不用「Repository」，改用<strong>專案（Project）</strong>與<strong>群組（Group）</strong>：</p>
-  <table>
-    <tr><th>GitLab 術語</th><th>GitHub 對應</th><th>說明</th></tr>
-    <tr><td><strong>Project</strong>（專案）</td><td>Repository</td><td>一個專案的容器</td></tr>
-    <tr><td><strong>Group</strong>（群組）</td><td>Organization</td><td>組織多個專案、管理權限</td></tr>
-    <tr><td><strong>Subgroup</strong></td><td>—</td><td>群組可巢狀</td></tr>
-  </table>
-  <div class="callout">
-    <strong>為什麼叫 Project：</strong>GitLab 認為專案不只是「程式碼」——還含 Issues、CI/CD、容器庫等，
-    所以叫專案比叫 repo 更貼近它的定位。
-  </div>
-
-  <h2>流程一：建立專案</h2>
-  <div class="demo-block">
-    <div class="demo-label">網頁操作 · WEB UI</div>
-    <pre>1. 右上角「+」→ New project / New blank project
-2. 填專案名稱（如 hello-world）
-3. 選 visibility（Private / Internal / Public）
+<h2>2.2 流程一：建立專案</h2>
+<div class="demo-block">
+  <div class="demo-label">網頁操作 · WEB UI</div>
+  <pre>1. 右上角「＋」→ New project → Create blank project
+2. Project name：hello-world（自動生成 slug）
+3. Visibility：Private（先選這個，可事後改）
 4. 勾選 Initialize repository with a README
-5. 按 Create project</pre>
-  </div>
+5. 可選 .gitignore 樣板、LICENSE 樣板
+6. Create project</pre>
+</div>
+<div class="callout warn"><strong>新手常踩：</strong>把 visibility 設成 <code>Public</code> 以為無所謂——
+程式碼會公開給全世界（含未登入者）。不確定就先 <code>Private</code>，之後隨時可改。</div>
 
-  <h2>流程二：Clone 到本機</h2>
-  <div class="demo-grid">
-    <div class="demo-block">
-      <div class="demo-label">命令 · COMMANDS</div>
-      <pre>git clone https://gitlab.com/USER/hello-world.git
-cd hello-world</pre>
-    </div>
-    <div class="demo-block">
-      <div class="demo-label">結果 · RESULT</div>
-      <pre>hello-world/
-├── .git/
-└── README.md</pre>
-    </div>
-  </div>
+<h2>2.3 流程二：Clone 到本機</h2>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">命令 · COMMANDS</div><pre>git clone https://gitlab.com/USER/hello-world.git
+cd hello-world
+git remote -v          <span class="hl-c"># 確認 origin</span></pre></div>
+  <div class="demo-block"><div class="demo-label">結果 · RESULT</div><pre>hello-world/
+├── .git/          <span class="hl-c"># 版本歷史（本地）</span>
+└── README.md      <span class="hl-c"># 剛勾選產生的檔案</span></pre></div>
+</div>
 
-  <h2>流程三：改檔 → 提交 → 上傳</h2>
-  <p>Git 的日常循環與 GitHub 完全一樣（Git 是同一套工具）：</p>
-  <div class="demo-block">
-    <div class="demo-label">日常循環 · THE LOOP</div>
-    <pre>git add .
-git commit -m "說明"
+<h2>2.4 流程三：改檔 → 提交 → 上傳</h2>
+<p>Git 的日常循環與 GitHub 完全一樣（Git 是同一套工具）：</p>
+<div class="demo-block">
+  <div class="demo-label">日常循環 · THE LOOP</div>
+  <pre>git add .
+git commit -m "說明這次改動"
 git push</pre>
-  </div>
-  <div class="callout info">
-    <strong>好消息：</strong>你在<a href="https://shumingyang-opencode.github.io/github-tech-zh-tw/docs/unit-02-first-repo.html" rel="noopener">GitHub 站學到的 Git 指令</a>
-    100% 適用——GitLab 只是「另一間托管 Git 的房子」。
-  </div>
+</div>
+<div class="callout"><strong>習慣養成：</strong>commit 訊息寫「做了什麼」而不是「改了檔案」——
+<code>git log --oneline</code> 一眼看懂歷史，未來的人（包括三個月後的你）會感謝你。</div>
 
-  <h2>首次推送 · First Push</h2>
-  <div class="demo-block">
-    <div class="demo-label">從零開始推送 · COMMANDS</div>
-    <pre>git init -b main
+<h2>2.5 流程四：從零推送既有資料夾</h2>
+<p>本機已經有專案、GitLab 上只有空白專案時：</p>
+<div class="demo-block">
+  <div class="demo-label">首次推送 · FIRST PUSH</div>
+  <pre>cd /path/to/my-app
+git init -b main                     <span class="hl-c"># 或 git init 後 git branch -M main</span>
 git add .
 git commit -m "first commit"
 git remote add origin https://gitlab.com/USER/hello-world.git
-git push -u origin main</pre>
-  </div>
+git push -u origin main              <span class="hl-c"># -u 記憶 upstream，之後直接 git push</span></pre>
+</div>
+<div class="callout warn"><strong>權限錯誤 403/denied 時：</strong>多半是認證問題。改用 SSH（<code>git@gitlab.com:...git</code>）
+或確認 PAT scope 勾了 <code>write_repository</code>，而不是把 URL 改來改去。</div>
 
-  <h2>Visibility：可見性</h2>
-  <table>
-    <tr><th>層級</th><th>誰能看到</th></tr>
-    <tr><td><strong>Private</strong></td><td>只有成員</td></tr>
-    <tr><td><strong>Internal</strong></td><td>登入者可見（自架環境常見）</td></tr>
-    <tr><td><strong>Public</strong></td><td>任何人（含未登入）</td></tr>
-  </table>
-  <p class="hint">自架 GitLab 時「Internal」很有用——整個公司可看，公司外看不到。</p>
+<h2>2.6 Group 群組：組織專案</h2>
+<p>多個專案該放進群組管理：</p>
+<div class="demo-block">
+  <div class="demo-label">建立群組 · GROUP</div>
+  <pre>左上角選單 → Groups → New group
+├── Group name：my-company
+└── 建立後可在 Groups 內再建 Subgroup
+    （如 my-company / frontend）
 
-  <h2>README 與 .gitignore</h2>
-  <p>與 GitHub 站講的相同原則（README 是專案門面、.gitignore 排除敏感檔）——不再重述，
-  直接複習<a href="https://shumingyang-opencode.github.io/github-tech-zh-tw/docs/unit-02-first-repo.html" rel="noopener">該單元</a>。</p>
+把既有專案移入：Project → Settings → General
+  → Advanced → Transfer project → 選群組</pre>
+</div>
+<table>
+<tr><th>權限角色</th><th>能幹嘛（由高到低）</th></tr>
+<tr><td><strong>Owner</strong></td><td>群組一切管理、刪除</td></tr>
+<tr><td><strong>Maintainer</strong></td><td>管理專案設定、合併權限、CI/CD 設定</td></tr>
+<tr><td><strong>Developer</strong></td><td>push、開 MR、跑 pipeline（日常開發主力）</td></tr>
+<tr><td><strong>Reporter</strong></td><td>唯讀＋回報 issue</td></tr>
+<tr><td><strong>Guest</strong></td><td>只能看 issue 等最小權限</td></tr>
+</table>
+<div class="callout info"><strong>權限會向下繼承：</strong>群組權限自動套到底下所有子群組與專案——
+在群組層級加一個 Developer，底下每個專案都是 Developer。要「例外」時再到專案層覆寫。</div>
+
+<h2>2.7 Visibility：三種可見性</h2>
+<table>
+<tr><th>層級</th><th>誰能看到</th><th>建議用途</th></tr>
+<tr><td><strong>Private</strong></td><td>只有專案成員</td><td>預設值、公司內部專案</td></tr>
+<tr><td><strong>Internal</strong></td><td>登入此 GitLab 實例的人</td><td>自架環境「全公司可見」</td></tr>
+<tr><td><strong>Public</strong></td><td>任何人（含未登入）</td><td>開源專案、作品集</td></tr>
+</table>
+<p class="hint">自架 GitLab 時 <code>Internal</code> 超好用：整個公司可看，公司外看不到——GitHub 沒有這個層級。</p>
+
+<h2>2.8 Worked Example：完成一次完整循環</h2>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">任務 · TASK</div><pre>1. 建立私有專案 demo-app（含 README）
+2. clone 到本機
+3. 新增 hello.py
+4. commit + push
+5. 在網頁確認檔案出現</pre></div>
+  <div class="demo-block"><div class="demo-label">驗收 · CHECKLIST</div><div class="demo-render">
+    <p>✅ <code>git clone</code> 成功<br>✅ <code>git push</code> 成功<br>✅ 網頁 Files 頁看到 <code>hello.py</code><br>✅ <code>git log --oneline</code> 有兩筆 commit<br>✅ <code>git remote -v</code> 指向 gitlab.com</p>
+  </div></div>
+</div>
+
+<h2>2.9 練習</h2>
+<ul>
+<li>建立一個群組，在裡面建立兩個專案，練習權限繼承。</li>
+<li>把專案 visibility 依序改成 Public → Private，觀察網頁警告。</li>
+<li>用 <code>git remote add</code> 方式把一個既有資料夾推到 GitLab。</li>
+</ul>
 
   <div class="outcome">
-    <strong>看完這頁你應該能說出：</strong>
-    <ul>
-      <li>Project 與 Group 對應 GitHub 的什麼。</li>
-      <li>建立、clone、push 一個 GitLab 專案。</li>
-      <li>三種 visibility 的差異。</li>
-      <li>Git 指令在兩平台通用。</li>
-    </ul>
+    <strong>看完這單元你應該能說出：</strong>
+    <ul><li>說出 Project 與 Group 各自對應 GitHub 的什麼概念，以及 Subgroup 的用途。</li><li>在網頁上建立一個新的空白專案並選對 visibility。</li><li>用 git clone 取得專案、修改後 add / commit / push 回 GitLab。</li><li>從零用 git init + remote add 把既有資料夾推上 GitLab。</li><li>建立群組並把專案放進群組，說出群組權限的層級關係。</li></ul>
   </div>
 
   <h2>延伸閱讀</h2>
   <ul>
-    <li>下一篇：<a href="unit-03-branches-mr.html">單元 3 · 分支與 Merge Request</a>。</li>
-    <li><a href="https://docs.gitlab.com/ee/user/project/" rel="noopener">GitLab Docs: Projects</a></li>
-  </ul>
+<li>上一篇：<a href="unit-01-gitlab-intro.html">單元 1 · GitLab 是什麼</a>。</li>
+<li>下一篇：<a href="unit-03-branches-mr.html">單元 3 · 分支與 Merge Request</a>。</li>
+<li><a href="../glossary.html">術語表</a>：複習全站。</li>
+</ul>
 
-  <div class="next-prev">
+<div class="next-prev">
     <a href="unit-01-gitlab-intro.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 1 · GitLab 是什麼</div></a>
     <a class="np-next" href="unit-03-branches-mr.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 3 · 分支與 Merge Request</div></a>
-  </div>
 </div>
-
-<footer>
-  這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
-  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span>
-</footer>
-
 </div>
-</body>
-</html>
+<footer>這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
+  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>
+</div></body></html>

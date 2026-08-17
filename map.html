@@ -3,95 +3,51 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>概念地圖 · GitLab 繁中教學站</title>
-<meta name="description" content="GitLab 平台功能全景圖——專案、MR、CI/CD、Pages 與一體化 DevOps。">
+<title>概念地圖 · GitLab 繁體中文教學站</title>
+<meta name="description" content="GitLab 概念地圖">
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <link rel="stylesheet" href="assets/site.css">
 </head>
 <body>
 <div class="container">
-
 <header>
   <h1>概念地圖</h1>
   <p class="subtitle">GitLab 平台的核心概念，一張圖看懂</p>
 </header>
-
 <nav class="topnav">
   <a href="index.html">首頁</a>
   <a href="map.html">概念地圖</a>
   <a href="learning-path.html">學習路線</a>
   <a href="docs/index.html">單元教學</a>
+  <a href="glossary.html">術語表</a>
   <a href="about.html">關於</a>
-</nav>
-
-<div class="back-link"><a href="index.html">← 回首頁</a></div>
-
+</nav><div class="back-link"><a href="index.html">← 回首頁</a></div>
 <div class="guide">
-  <p>
-    GitLab 做的事可以一句話講完：<strong>一個產品把整個 DevOps 生命週期包起來</strong>——
-    從程式碼到部署、監控，全部內建。下面從「基礎」到「比較」拆解。
-  </p>
-
-  <h2>1. 基礎：專案與群組 · Projects &amp; Groups</h2>
+  <p>GitLab 做的事可以一句話講完：<strong>一個產品把整個 DevOps 生命週期包起來</strong>——從程式碼到部署、監控，全部內建。下面從「基礎」到「比較」拆解，先抓骨架、再逐單元填充細節。</p>
+  <div class="callout info"><strong>讀圖方式：</strong>四組群組對應四個學習階段。看完概念地圖再看<a href="learning-path.html">學習路線</a>安排順序，最後逐單元深入。</div>
+  <h2>1. 平台基礎 · Projects &amp; Groups</h2>
   <p>一切從「專案」開始（<a href="docs/unit-01-gitlab-intro.html">單元 1</a>、<a href="docs/unit-02-first-project.html">單元 2</a>）。</p>
   <div class="concept-map">
-    <div class="cm-row">
-      <a class="cm-node on-ramp" href="docs/unit-01-gitlab-intro.html"><span class="label">GitLab</span><span class="tag">一體化 DevOps 平台</span></a>
-      <a class="cm-node on-ramp" href="docs/unit-01-gitlab-intro.html"><span class="label">自架</span><span class="tag">CE / EE 安裝於自家</span></a>
-      <a class="cm-node on-ramp" href="docs/unit-02-first-project.html"><span class="label">Project</span><span class="tag">專案（=repo）</span></a>
-      <a class="cm-node on-ramp" href="docs/unit-02-first-project.html"><span class="label">Group</span><span class="tag">群組組織專案</span></a>
-    </div>
+    <div class="cm-row"><a class="cm-node on-ramp" href="docs/unit-01-gitlab-intro.html"><span class="label">GitLab</span><span class="tag">一體化 DevOps 平台</span></a><a class="cm-node on-ramp" href="docs/unit-01-gitlab-intro.html"><span class="label">自架</span><span class="tag">CE / EE 安裝於自家</span></a><a class="cm-node on-ramp" href="docs/unit-02-first-project.html"><span class="label">Project</span><span class="tag">專案（=repo）</span></a><a class="cm-node on-ramp" href="docs/unit-02-first-project.html"><span class="label">Group</span><span class="tag">群組組織專案</span></a></div>
   </div>
-
-  <h2>2. 協作：Merge Request · MR</h2>
+  <h2>2. 協作 · Merge Request</h2>
   <p>GitLab 的合併請求流程（<a href="docs/unit-03-branches-mr.html">單元 3</a>、<a href="docs/unit-04-merge-request.html">單元 4</a>）。</p>
   <div class="concept-map">
-    <div class="cm-row">
-      <a class="cm-node service" href="docs/unit-03-branches-mr.html"><span class="label">分支</span><span class="tag">Branch</span></a>
-      <a class="cm-node service" href="docs/unit-03-branches-mr.html"><span class="label">MR</span><span class="tag">Merge Request 合併請求</span></a>
-      <a class="cm-node service" href="docs/unit-03-branches-mr.html"><span class="label">衝突</span><span class="tag">Conflict 處理</span></a>
-      <a class="cm-node service" href="docs/unit-04-merge-request.html"><span class="label">Approvals</span><span class="tag">批准機制</span></a>
-    </div>
-    <div class="cm-row">
-      <a class="cm-node service" href="docs/unit-04-merge-request.html"><span class="label">Code Review</span><span class="tag">逐行審查</span></a>
-      <a class="cm-node service" href="docs/unit-04-merge-request.html"><span class="label">保護分支</span><span class="tag">強制 MR 才能合併</span></a>
-      <a class="cm-node service" href="docs/unit-04-merge-request.html"><span class="label">關聯</span><span class="tag">Closes #issue</span></a>
-    </div>
+    <div class="cm-row"><a class="cm-node service" href="docs/unit-03-branches-mr.html"><span class="label">分支</span><span class="tag">Branch</span></a><a class="cm-node service" href="docs/unit-03-branches-mr.html"><span class="label">MR</span><span class="tag">Merge Request 合併請求</span></a><a class="cm-node service" href="docs/unit-03-branches-mr.html"><span class="label">衝突</span><span class="tag">Conflict 處理</span></a><a class="cm-node service" href="docs/unit-04-merge-request.html"><span class="label">Approvals</span><span class="tag">批准機制</span></a></div>
+    <div class="cm-row"><a class="cm-node service" href="docs/unit-04-merge-request.html"><span class="label">Code Review</span><span class="tag">逐行審查</span></a><a class="cm-node service" href="docs/unit-04-merge-request.html"><span class="label">保護分支</span><span class="tag">強制 MR 才能合併</span></a><a class="cm-node service" href="docs/unit-04-merge-request.html"><span class="label">合併方式</span><span class="tag">squash/rebase/merge</span></a></div>
   </div>
-
-  <h2>3. DevOps 內建：Issues / CI/CD / Pages</h2>
+  <h2>3. DevOps 內建 · Issues / CI/CD / Pages</h2>
   <p>GitLab 的最大特色——全都內建在同一產品（<a href="docs/unit-05-issues-boards.html">單元 5</a>、<a href="docs/unit-06-gitlab-ci.html">單元 6</a>、<a href="docs/unit-07-gitlab-pages.html">單元 7</a>）。</p>
   <div class="concept-map">
-    <div class="cm-row">
-      <a class="cm-node standalone" href="docs/unit-05-issues-boards.html"><span class="label">Issues</span><span class="tag">任務與 bug</span></a>
-      <a class="cm-node standalone" href="docs/unit-05-issues-boards.html"><span class="label">Boards</span><span class="tag">看板管理</span></a>
-      <a class="cm-node standalone" href="docs/unit-06-gitlab-ci.html"><span class="label">CI/CD</span><span class="tag">內建 pipeline</span></a>
-      <a class="cm-node standalone" href="docs/unit-07-gitlab-pages.html"><span class="label">Pages</span><span class="tag">靜態網站</span></a>
-    </div>
+    <div class="cm-row"><a class="cm-node standalone" href="docs/unit-05-issues-boards.html"><span class="label">Issues</span><span class="tag">任務與 bug</span></a><a class="cm-node standalone" href="docs/unit-05-issues-boards.html"><span class="label">Boards</span><span class="tag">看板管理</span></a><a class="cm-node standalone" href="docs/unit-06-gitlab-ci.html"><span class="label">Pipeline</span><span class="tag">stages/jobs/runners</span></a><a class="cm-node standalone" href="docs/unit-07-gitlab-pages.html"><span class="label">Pages</span><span class="tag">靜態網站</span></a></div>
   </div>
-
-  <h2>4. 比較：GitLab vs GitHub</h2>
+  <h2>4. 比較與選型 · GitLab vs GitHub</h2>
   <p>本課重點：全面對比與選型（<a href="docs/unit-08-gitlab-vs-github.html">單元 8</a>）。</p>
   <div class="concept-map">
-    <div class="cm-row">
-      <a class="cm-node meta" href="docs/unit-08-gitlab-vs-github.html"><span class="label">術語對照</span><span class="tag">MR vs PR</span></a>
-      <a class="cm-node meta" href="docs/unit-08-gitlab-vs-github.html"><span class="label">託管模式</span><span class="tag">自架 vs 公有雲</span></a>
-      <a class="cm-node meta" href="docs/unit-08-gitlab-vs-github.html"><span class="label">CI/CD</span><span class="tag">內建 vs Actions</span></a>
-      <a class="cm-node meta" href="docs/unit-08-gitlab-vs-github.html"><span class="label">選型建議</span><span class="tag">哪個適合你</span></a>
-    </div>
+    <div class="cm-row"><a class="cm-node meta" href="docs/unit-08-gitlab-vs-github.html"><span class="label">術語對照</span><span class="tag">MR vs PR</span></a><a class="cm-node meta" href="docs/unit-08-gitlab-vs-github.html"><span class="label">託管模式</span><span class="tag">自架 vs 公有雲</span></a><a class="cm-node meta" href="docs/unit-08-gitlab-vs-github.html"><span class="label">CI/CD</span><span class="tag">內建 vs Actions</span></a><a class="cm-node meta" href="docs/unit-08-gitlab-vs-github.html"><span class="label">選型建議</span><span class="tag">哪個適合你</span></a></div>
   </div>
-
-  <div class="callout info">
-    <strong>小結：</strong>GitLab = 「一個產品包辦 DevOps」×「可完全自架」。
-    學會它，你不只會用一套工具，更能理解「GitHub 之外」的世界長什麼樣。
-  </div>
-</div>
-
-<footer>
-  這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
-  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span>
-</footer>
-
-</div>
-</body>
-</html>
+  <p class="cm-caption">學習順序：先平台基礎與第一個專案，再 MR 協作，接著 DevOps 內建功能，最後比較選型。</p>
+  <div class="callout info"><strong>小結：</strong>GitLab = 「一個產品包辦 DevOps」×「可完全自架」。學會它，你不只會用一套工具，更能理解「GitHub 之外」的世界長什麼樣。</div>
+</div><footer>這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
+  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>
+</div></body></html>

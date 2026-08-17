@@ -3,129 +3,62 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>學習路線 · GitLab 繁中教學站</title>
-<meta name="description" content="從認識 GitLab 到與 GitHub 比較的五層學習路線。">
+<title>學習路線 · GitLab 繁體中文教學站</title>
+<meta name="description" content="GitLab 學習路線">
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <link rel="stylesheet" href="assets/site.css">
 </head>
 <body>
 <div class="container">
-
 <header>
   <h1>學習路線</h1>
   <p class="subtitle">從「認識」到「比較」的五層路線</p>
 </header>
-
 <nav class="topnav">
   <a href="index.html">首頁</a>
   <a href="map.html">概念地圖</a>
   <a href="learning-path.html">學習路線</a>
   <a href="docs/index.html">單元教學</a>
+  <a href="glossary.html">術語表</a>
   <a href="about.html">關於</a>
-</nav>
-
-<div class="back-link"><a href="index.html">← 回首頁</a></div>
-
+</nav><div class="back-link"><a href="index.html">← 回首頁</a></div>
+<div class="guide">
+  <p>五個層級對應五種掌握度：先知道「GitLab 是什麼」，再親手建立專案，接著用 MR 參與團隊協作，然後進入它最強的 DevOps 內建功能，最後用比較章節建立全局觀與選型能力。</p>
+</div>
 <div class="level lv-emerald">
-  <div class="level-head">
-    <span class="level-badge">L0</span>
-    <span class="level-title">認識它</span>
-    <span class="level-sub">GitLab 是什麼？為什麼能自架？</span>
-  </div>
+  <div class="level-head"><span class="level-badge">L0</span><span class="level-title">認識 GitLab</span><span class="level-sub">它是什麼、為什麼能自架</span></div>
   <div class="card-grid">
-    <a class="card" href="docs/unit-01-gitlab-intro.html">
-      <div class="c-name">GitLab 是什麼</div>
-      <div class="c-zh">GitLab.com vs 自架（CE/EE）、一體化 DevOps 平台。</div>
-      <div class="c-tags"><span class="c-tag">單元 1</span><span class="c-tag">概念</span></div>
-    </a>
+    <a class="card" href="docs/unit-01-gitlab-intro.html"><div class="c-name">GitLab 是什麼</div><div class="c-zh">一體化 DevOps、CE/EE、與 Git/GitHub 的關係。</div><div class="c-tags"><span class="c-tag">單元 1</span><span class="c-tag">概念</span></div></a>
+    <a class="card" href="glossary.html"><div class="c-name">📖 術語表</div><div class="c-zh">全站速查。</div><div class="c-tags"><span class="c-tag">速查</span></div></a>
   </div>
 </div>
-
 <div class="level lv-cyan">
-  <div class="level-head">
-    <span class="level-badge">L1</span>
-    <span class="level-title">上手</span>
-    <span class="level-sub">建立並管理你的第一個專案</span>
-  </div>
+  <div class="level-head"><span class="level-badge">L1</span><span class="level-title">上手</span><span class="level-sub">建立並管理你的第一個專案</span></div>
   <div class="card-grid">
-    <a class="card" href="docs/unit-02-first-project.html">
-      <div class="c-name">第一個專案</div>
-      <div class="c-zh">Project / Group、clone / push、README。</div>
-      <div class="c-tags"><span class="c-tag">單元 2</span><span class="c-tag">動手做</span></div>
-    </a>
+    <a class="card" href="docs/unit-02-first-project.html"><div class="c-name">第一個專案</div><div class="c-zh">Project/Group、clone/push、visibility、權限角色。</div><div class="c-tags"><span class="c-tag">單元 2</span><span class="c-tag">動手做</span></div></a>
   </div>
 </div>
-
 <div class="level lv-amber">
-  <div class="level-head">
-    <span class="level-badge">L2</span>
-    <span class="level-title">協作</span>
-    <span class="level-sub">分支與 Merge Request</span>
-  </div>
+  <div class="level-head"><span class="level-badge">L2</span><span class="level-title">協作</span><span class="level-sub">分支與 Merge Request</span></div>
   <div class="card-grid">
-    <a class="card" href="docs/unit-03-branches-mr.html">
-      <div class="c-name">分支與 Merge Request</div>
-      <div class="c-zh">branch、MR（GitLab 的 PR）、衝突處理。</div>
-      <div class="c-tags"><span class="c-tag">單元 3</span></div>
-    </a>
-    <a class="card" href="docs/unit-04-merge-request.html">
-      <div class="c-name">Merge Request 協作</div>
-      <div class="c-zh">MR 流程、Approvals、code review、保護分支。</div>
-      <div class="c-tags"><span class="c-tag">單元 4</span></div>
-    </a>
+    <a class="card" href="docs/unit-03-branches-mr.html"><div class="c-name">分支與 Merge Request</div><div class="c-zh">branch、MR（GitLab 的 PR）、衝突處理。</div><div class="c-tags"><span class="c-tag">單元 3</span></div></a>
+    <a class="card" href="docs/unit-04-merge-request.html"><div class="c-name">Merge Request 深入</div><div class="c-zh">審查、討論、Approvals、squash/rebase/merge。</div><div class="c-tags"><span class="c-tag">單元 4</span></div></a>
   </div>
 </div>
-
 <div class="level lv-fuchsia">
-  <div class="level-head">
-    <span class="level-badge">L3</span>
-    <span class="level-title">DevOps</span>
-    <span class="level-sub">Issues、CI/CD 與 Pages</span>
-  </div>
+  <div class="level-head"><span class="level-badge">L3</span><span class="level-title">DevOps</span><span class="level-sub">Issues、CI/CD 與 Pages</span></div>
   <div class="card-grid">
-    <a class="card" href="docs/unit-05-issues-boards.html">
-      <div class="c-name">Issues 與專案管理</div>
-      <div class="c-zh">Issues、labels、milestones、Boards 看板。</div>
-      <div class="c-tags"><span class="c-tag">單元 5</span></div>
-    </a>
-    <a class="card" href="docs/unit-06-gitlab-ci.html">
-      <div class="c-name">GitLab CI/CD</div>
-      <div class="c-zh">.gitlab-ci.yml、Runners、Pipeline、stages。</div>
-      <div class="c-tags"><span class="c-tag">單元 6</span></div>
-    </a>
-    <a class="card" href="docs/unit-07-gitlab-pages.html">
-      <div class="c-name">GitLab Pages</div>
-      <div class="c-zh">靜態網站部署。</div>
-      <div class="c-tags"><span class="c-tag">單元 7</span></div>
-    </a>
+    <a class="card" href="docs/unit-05-issues-boards.html"><div class="c-name">Issues 與 Boards</div><div class="c-zh">Issue、scoped labels、里程碑、看板、weight。</div><div class="c-tags"><span class="c-tag">單元 5</span></div></a>
+    <a class="card" href="docs/unit-06-gitlab-ci.html"><div class="c-name">GitLab CI</div><div class="c-zh">.gitlab-ci.yml、stages/jobs/runners/artifacts。</div><div class="c-tags"><span class="c-tag">單元 6</span></div></a>
+    <a class="card" href="docs/unit-07-gitlab-pages.html"><div class="c-name">GitLab Pages</div><div class="c-zh">專案頁/群組頁/自訂網域。</div><div class="c-tags"><span class="c-tag">單元 7</span></div></a>
   </div>
 </div>
-
 <div class="level lv-violet">
-  <div class="level-head">
-    <span class="level-badge">L4</span>
-    <span class="level-title">比較與選型</span>
-    <span class="level-sub">GitLab vs GitHub 詳細比較</span>
-  </div>
+  <div class="level-head"><span class="level-badge">L4</span><span class="level-title">比較與選型</span><span class="level-sub">GitLab vs GitHub 詳細比較</span></div>
   <div class="card-grid">
-    <a class="card" href="docs/unit-08-gitlab-vs-github.html">
-      <div class="c-name">GitLab vs GitHub</div>
-      <div class="c-zh">術語、託管、CI/CD、開源、價格、選型建議。</div>
-      <div class="c-tags"><span class="c-tag">單元 8</span><span class="c-tag">重點</span></div>
-    </a>
+    <a class="card" href="docs/unit-08-gitlab-vs-github.html"><div class="c-name">GitLab vs GitHub</div><div class="c-zh">術語、託管、CI/CD、開源、價格、選型建議。</div><div class="c-tags"><span class="c-tag">單元 8</span><span class="c-tag">重點</span></div></a>
   </div>
 </div>
-
-<div class="callout">
-  <strong>看完這條路線你應該能</strong>：在 GitLab 上建立並管理專案；用 MR 參與團隊協作；
-  寫出能跑的 CI/CD pipeline；部署 GitLab Pages；並能說清楚 GitLab 與 GitHub 的差異、做出選型。
-</div>
-
-<footer>
-  這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
-  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span>
-</footer>
-
-</div>
-</body>
-</html>
+<div class="callout"><strong>看完這條路線你應該能</strong>：在 GitLab 上建立並管理專案；用 MR 參與團隊協作並設定批准門檻；寫出能跑的 CI/CD pipeline；部署 GitLab Pages；並能說清楚 GitLab 與 GitHub 的差異、做出選型。</div><footer>這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
+  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>
+</div></body></html>

@@ -3,85 +3,57 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>關於本站 · GitLab 繁中教學站</title>
-<meta name="description" content="關於本站的緣起、授權與建置方式。">
+<title>關於本站 · GitLab 繁體中文教學站</title>
+<meta name="description" content="GitLab 教學站關於頁">
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <link rel="stylesheet" href="assets/site.css">
 </head>
 <body>
 <div class="container">
-
 <header>
   <h1>關於本站</h1>
   <p class="subtitle">緣起、授權與建置方式</p>
 </header>
-
 <nav class="topnav">
   <a href="index.html">首頁</a>
   <a href="map.html">概念地圖</a>
   <a href="learning-path.html">學習路線</a>
   <a href="docs/index.html">單元教學</a>
+  <a href="glossary.html">術語表</a>
   <a href="about.html">關於</a>
-</nav>
-
-<div class="back-link"><a href="index.html">← 回首頁</a></div>
-
+</nav><div class="back-link"><a href="index.html">← 回首頁</a></div>
 <div class="guide">
   <h2>這個網站是什麼</h2>
-  <p>
-    一份把 <strong>GitLab 平台</strong>從平台概念、第一個專案，教到 CI/CD、Pages，
-    並與 GitHub 詳細比較的繁體中文教學網站。目標讀者是<strong>初階工程師與學生</strong>——
-    你可能已熟悉 GitHub，想認識「另一種 DevOps 平台」。
-  </p>
-  <p>
-    本站採用<strong>中英對照</strong>：中文解說為主，技術名詞與指令保留英文，
-    讓你同時學會「怎麼做」與「怎麼說」。
-  </p>
-
+  <p>一份把 <strong>GitLab 平台</strong>從平台概念、第一個專案，教到 CI/CD、Pages，並與 GitHub 詳細比較的<strong>中英對照深度教學</strong>的繁體中文網站。目標讀者是<strong>初階工程師與學生</strong>——你可能已熟悉 GitHub，想認識「另一種 DevOps 平台」。</p>
+  <p>本站採用<strong>中英對照</strong>：中文解說為主，技術名詞與指令保留英文，讓你同時學會「怎麼做」與「怎麼說」。</p>
   <h2>為什麼要學 GitLab</h2>
   <ul>
     <li>少數能完全自架的 DevOps 平台——程式碼與 CI/CD 都留在自家。</li>
     <li>一體化設計：從 Issue 到部署同一套產品。</li>
     <li>認識「GitHub 之外的世界」，懂得比較與選型。</li>
   </ul>
-
   <h2>本站建置</h2>
   <ul class="timeline">
     <li>決定主題與課程大綱（8 單元、中英對照、含 GitLab vs GitHub 比較專章）</li>
     <li>承襲既有教學站的深色 × 霓虹設計語言與架構慣例</li>
-    <li>建立首頁、概念地圖、學習路線與單元教學架構</li>
-    <li>逐單元撰寫內容，持續擴充與修正</li>
+    <li>每個單元設計「定義/原理 + 步驟 + Worked Example + 常見錯誤 + 練習 + 看完應能說出」結構</li>
+    <li>新增術語表速查頁，涵蓋核心概念、協作審查、CI/CD 與專案管理</li>
   </ul>
-
   <h2>授權</h2>
-  <div class="license-box">
-    <strong>本站教學內容</strong>（繁體中文解說）為本站原創，以
-    <strong>CC-BY-4.0</strong> 授權釋出——歡迎引用、改作、分享，惟需標示來源。
-    <br><br>
-    文中技術名詞與操作引用自
-    <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a>
-    與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。
-  </div>
-
+  <div class="license-box"><strong>本站教學內容</strong>（繁體中文解說）為本站原創，以 <strong>CC-BY-4.0</strong> 授權釋出——歡迎引用、改作、分享，惟需標示來源。<br><br>文中技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</div>
   <h2>技術資訊</h2>
   <div class="file-tree">gitlab-tech-zh-tw/
 ├── index.html            <span class="f">課程總覽</span>
 ├── map.html              <span class="f">概念地圖</span>
 ├── learning-path.html    <span class="f">學習路線</span>
 ├── about.html            <span class="f">關於本站</span>
+├── glossary.html         <span class="f">📖 術語表</span>
 ├── docs/                 <span class="dir">單元教學</span>
 │   ├── index.html        <span class="f">單元一覽</span>
-│   └── unit-01…08        <span class="f">8 篇教學頁</span>
+│   └── unit-01…08        <span class="f">8 篇深度教學頁</span>
 ├── assets/site.css       <span class="f">單一共享樣式</span>
 └── .nojekyll             <span class="f">GitHub Pages 直出</span></div>
   <p class="hint">本站為純靜態 HTML，無建置步驟，直接部署於 GitHub Pages。</p>
-</div>
-
-<footer>
-  這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
-  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span>
-</footer>
-
-</div>
-</body>
-</html>
+</div><footer>這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
+  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>
+</div></body></html>

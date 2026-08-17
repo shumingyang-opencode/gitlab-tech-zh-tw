@@ -3,134 +3,161 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>單元 3 · 分支與 Merge Request · GitLab 繁中教學站</title>
-<meta name="description" content="GitLab 分支與 Merge Request：branch、MR、衝突處理。">
+<title>單元 3 · 分支與 Merge Request · GitLab 繁體中文教學站</title>
+<meta name="description" content="分支操作、MR 是什麼、開 MR 流程、Closes、conflict 解決">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
 <link rel="stylesheet" href="../assets/site.css">
 </head>
 <body>
 <div class="container">
-
 <header>
   <h1>單元 3 · 分支與 Merge Request</h1>
-  <p class="subtitle">GitLab 的「PR」— Branches &amp; Merge Request</p>
+  <p class="subtitle">branch、MR 流程、衝突處理</p>
 </header>
-
 <nav class="topnav">
   <a href="../index.html">首頁</a>
   <a href="../map.html">概念地圖</a>
   <a href="../learning-path.html">學習路線</a>
-  <a href="index.html">單元教學</a>
+  <a href="../docs/index.html">單元教學</a>
+  <a href="../glossary.html">術語表</a>
   <a href="../about.html">關於</a>
-</nav>
-
-<div class="back-link"><a href="index.html">← 單元教學</a></div>
-
+</nav><div class="back-link"><a href="index.html">← 單元教學</a></div>
 <div class="guide">
+<h2>3.1 為什麼需要分支</h2>
+<p>分支（branch）是 Git 最強大的協作機制：每個人<strong>各自複製一條「工作線」</strong>開發，
+互不干擾，最後再合併回去。<code>main</code> 永遠保持「可發布」的乾淨狀態，
+新功能、修 bug 都先開分支做。</p>
+<div class="callout"><strong>心智模型：</strong>main 是「出版中的正本」，feature 分支是「草稿」。
+草稿寫完、校稿（review）通過，才正式併入正本。</div>
 
-  <p>
-    分支的 Git 指令與 GitHub 完全相同。這單元重點是 GitLab 的<strong>專屬流程</strong>：
-    開分支 → 開發 → 發起 <strong>Merge Request（MR）</strong>。
-  </p>
+<h2>3.2 分支操作（與 GitHub 相同）</h2>
+<div class="demo-block">
+  <div class="demo-label">常用指令 · COMMANDS</div>
+  <pre>git checkout -b feature-login   <span class="hl-c"># 建立並切換（= git branch + git checkout）</span>
+git switch feature-login        <span class="hl-c"># 新版語法：切換</span>
+git branch                      <span class="hl-c"># 列出分支（* 標示目前所在）</span>
+git push -u origin feature-login <span class="hl-c"># 推分支到遠端並記住 upstream</span>
+git checkout main && git pull   <span class="hl-c"># 回主分支並更新</span></pre>
+</div>
+<div class="callout info"><strong>命名慣例：</strong><code>feature/xxx</code>、<code>fix/xxx</code>、<code>chore/xxx</code>。
+GitLab 網頁還支援從 Issue 一鍵開分支：<code>Create merge request and branch</code>——分支名自動帶 issue 編號。</div>
 
-  <h2>分支操作（與 GitHub 相同）</h2>
-  <div class="demo-block">
-    <div class="demo-label">常用指令 · COMMANDS</div>
-    <pre>git checkout -b feature-login   <span class="hl-c"># 建立並切換</span>
-git push -u origin feature-login <span class="hl-c"># 推分支</span>
-git branch                       <span class="hl-c"># 列分支</span></pre>
-  </div>
-  <div class="callout info">
-    <strong>命名慣例相同：</strong><code>feature/xxx</code>、<code>fix/xxx</code>、<code>chore/xxx</code>。
-  </div>
+<h2>3.3 Merge Request 是什麼</h2>
+<p><strong>Merge Request（MR）</strong>＝ GitHub 的 <strong>Pull Request（PR）</strong>——
+「請求把某分支合併進另一分支」的<strong>審查流程</strong>。名字不同，概念相同：不是直接 merge，
+而是提出請求 → 隊友 review → 批准 → 合併。</p>
+<div class="demo-block">
+  <div class="demo-label">MR 生命週期 · LIFECYCLE</div>
+  <pre>開分支 → 開發 → commit → push
+   → 發起 MR（source → target）
+   → CI pipeline 自動跑（單元 6）
+   → 隊友 Review / 留言 / Approve
+   → 合併（或 squash / rebase）
+   → 分支刪除、issue 自動關閉</pre>
+</div>
 
-  <h2>Merge Request 是什麼 · What is an MR</h2>
-  <p>
-    <strong>Merge Request（MR）</strong>＝ GitHub 的 <strong>Pull Request（PR）</strong>——
-    「請求把某分支合併進另一分支」的審查流程。名字不同，概念相同。
-  </p>
-  <div class="demo-block">
-    <div class="demo-label">MR 流程 · WORKFLOW</div>
-    <pre>1. 開分支 → 開發 → push
-2. GitLab 出現「Create merge request」按鈕
+<h2>3.4 開 MR 的兩種方式</h2>
+<h3>方式一：push 後網頁提示</h3>
+<p>push 新分支後，GitLab 在「Branches」頁與「Merge requests」頁都會出現
+<code>Create merge request</code> 提示——點下去 GitLab 已幫你填好 source/target。</p>
+<h3>方式二：Merge Requests 頁手動建立</h3>
+<div class="demo-block">
+  <div class="demo-label">操作 · WEB UI</div>
+  <pre>專案 → Merge requests → New merge request
+1. Source branch：feature-login（來源）
+2. Target branch：main（目標）
 3. 填標題與描述
-4. 隊友 Review → Approve
-5. Merge 完成</pre>
-  </div>
+4. 指派 Reviewers / Assignees
+5. Create merge request</pre>
+</div>
 
-  <h2>開 MR 的兩種方式</h2>
-  <h3>方式一：push 後網頁提示</h3>
-  <p>push 新分支後，GitLab 會在「Branches」或 Commit 頁提示「Create merge request」。</p>
-  <h3>方式二：Merge Requests 頁</h3>
-  <div class="demo-block">
-    <div class="demo-label">操作 · WEB UI</div>
-    <pre>專案 → Merge requests → New merge request
-→ 選 source（來源分支）與 target（目標分支）
-→ 填描述 → Create</pre>
-  </div>
-
-  <h2>MR 描述與關聯 Issue</h2>
-  <div class="demo-block">
-    <div class="demo-label">MR 描述 · DESCRIPTION</div>
-    <pre>修正登入頁空白。
+<h2>3.5 MR 描述與關聯 Issue</h2>
+<div class="demo-block">
+  <div class="demo-label">MR 描述 · DESCRIPTION</div>
+  <pre>## 修正登入頁在 Safari 空白
 
 - 加上欄位驗證
-- 修正錯誤訊息
+- 修正錯誤訊息樣式
+
+## 測試
+- [x] 手動測試 Safari 17
+- [ ] 補單元測試
 
 Closes #12</pre>
-  </div>
-  <p class="hint">與 GitHub 相同的關鍵字：<code>Closes</code> / <code>Fixes</code> + <code>#issue編號</code>，合併時自動關閉 issue。</p>
+</div>
+<p class="hint">關鍵字 <code>Closes</code> / <code>Fixes</code> + <code>#issue編號</code>：MR 合併時自動關閉該 issue。
+這是「Issue → MR → 合併 → 自動收尾」閉環的關鍵一步。</p>
 
-  <h2>衝突處理 · Conflicts</h2>
-  <p>與 GitHub 相同：兩邊改同一行 → GitLab 標記衝突，需手動解決。</p>
-  <div class="demo-block">
-    <div class="demo-label">衝突標記 · MARKS</div>
-    <pre><span class="hl-c">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</span>
+<h2>3.6 衝突處理 · Conflicts</h2>
+<p>當兩邊都改了<strong>同一行</strong>（或 Git 無法自動合併）就產生衝突。GitLab 會把 MR 標記為衝突狀態：</p>
+<div class="demo-block">
+  <div class="demo-label">衝突標記 · MARKS</div>
+  <pre><span class="hl-c">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</span>
 price = 100
 <span class="hl-c">=======</span>
 price = 120
 <span class="hl-c">&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature-x</span></pre>
-  </div>
-  <p>GitLab 還提供「Resolve conflicts」網頁按鈕，簡單衝突可直接在網頁解決（不必開本機）。</p>
-  <div class="callout">
-    <strong>維持好習慣：</strong>小 commit、頻繁 pull、一次只做一件事——衝突就會又少又好解。
-  </div>
+</div>
+<p>手動解決流程：</p>
+<ol>
+<li><code>git checkout main && git pull</code> 更新。</li>
+<li><code>git checkout feature-x && git merge main</code> 合併並產生衝突。</li>
+<li>編輯衝突檔，刪掉標記，保留正確內容（兩者都可能要留）。</li>
+<li><code>git add .</code> → <code>git commit</code> → <code>git push</code>。</li>
+</ol>
+<div class="callout info"><strong>偷懶捷徑：</strong>簡單衝突可用 GitLab 網頁的
+<code>Resolve conflicts</code> 按鈕直接改，不必開本機——但要小心改錯，複雜衝突還是本機處理。</div>
+<div class="callout warn"><strong>減少衝突的好習慣：</strong>小 commit、頻繁 <code>git pull</code>、
+一次只改一件事、避免大改版重寫同一批檔案。衝突大多不是技術問題，是「溝通與節奏」問題。</div>
 
-  <h2>MR 的兩種常見目標分支</h2>
-  <table>
-    <tr><th>情境</th><th>Target</th></tr>
-    <tr><td>功能開發</td><td>main / master</td></tr>
-    <tr><td>版本發布</td><td>release/1.0 等分支</td></tr>
-  </table>
-  <p class="hint">GitLab 新專案主分支慣用 <code>main</code>；舊專案可能是 <code>master</code>——兩者只是名字。</p>
+<h2>3.7 MR 的兩種常見目標分支</h2>
+<table>
+<tr><th>情境</th><th>Target 分支</th><th>說明</th></tr>
+<tr><td>功能開發</td><td>main / master</td><td>日常最常見</td></tr>
+<tr><td>版本發布</td><td>release/1.0 等</td><td>先併入 release 分支再發版</td></tr>
+<tr><td>長期功能</td><td>develop</td><td>git-flow 類流程</td></tr>
+</table>
+<p class="hint">GitLab 新專案主分支慣用 <code>main</code>；舊專案可能是 <code>master</code>——兩者只是名字。</p>
+
+<h2>3.8 Worked Example：完整開一顆 MR</h2>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">命令 · COMMANDS</div><pre>git checkout -b fix/typo
+# 編輯 README 修正錯字
+git add README.md
+git commit -m "Fix typo in README"
+git push -u origin fix/typo
+# 網頁 → Create merge request
+# 描述寫：Fixes #3
+# Merge</pre></div>
+  <div class="demo-block"><div class="demo-label">驗收 · CHECKLIST</div><div class="demo-render">
+    <p>✅ MR 建立成功、target=main<br>✅ 描述含 <code>Fixes #3</code><br>✅ pipeline 綠燈<br>✅ 合併後分支自動刪除<br>✅ Issue #3 自動關閉</p>
+  </div></div>
+</div>
+
+<h2>3.9 練習</h2>
+<ul>
+<li>開一個 <code>feature/hello</code> 分支，加一個檔案，push 後發 MR，再自己合併。</li>
+<li>製造一次衝突：兩個分支都改同一行，練習手動解衝突。</li>
+<li>在 MR 描述用 <code>Closes #編號</code>，合併後確認 issue 真的關了。</li>
+</ul>
 
   <div class="outcome">
-    <strong>看完這頁你應該能說出：</strong>
-    <ul>
-      <li>MR 就是 GitLab 的 PR。</li>
-      <li>開 MR 的流程與 target/source 選擇。</li>
-      <li>用 <code>Closes #12</code> 關聯 issue。</li>
-      <li>衝突如何解決（含網頁 Resolve）。</li>
-    </ul>
+    <strong>看完這單元你應該能說出：</strong>
+    <ul><li>說出 MR 就是 GitLab 的「Pull Request」，並講出完整 MR 生命週期。</li><li>用 git checkout -b 開分支、git push -u 推分支並在網頁發起 MR。</li><li>用 Closes #12 / Fixes #12 讓 MR 合併時自動關閉 issue。</li><li>讀懂衝突標記（&lt;&lt;&lt;&lt;&lt;&lt;&lt; / ======= / &gt;&gt;&gt;&gt;&gt;&gt;&gt;）並手動解決，或使用網頁 Resolve conflicts。</li><li>解釋「小 commit、頻繁 pull」如何減少衝突。</li></ul>
   </div>
 
   <h2>延伸閱讀</h2>
   <ul>
-    <li>下一篇：<a href="unit-04-merge-request.html">單元 4 · Merge Request 協作</a>——Approvals 與 code review。</li>
-    <li><a href="https://docs.gitlab.com/ee/user/project/merge_requests/" rel="noopener">GitLab Docs: Merge requests</a></li>
-  </ul>
+<li>上一篇：<a href="unit-02-first-project.html">單元 2 · 第一個專案</a>。</li>
+<li>下一篇：<a href="unit-04-merge-request.html">單元 4 · Merge Request 深入</a>。</li>
+<li><a href="../glossary.html">術語表</a>：複習全站。</li>
+</ul>
 
-  <div class="next-prev">
+<div class="next-prev">
     <a href="unit-02-first-project.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 2 · 第一個專案</div></a>
-    <a class="np-next" href="unit-04-merge-request.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 4 · Merge Request 協作</div></a>
-  </div>
+    <a class="np-next" href="unit-04-merge-request.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 4 · Merge Request 深入</div></a>
 </div>
-
-<footer>
-  這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
-  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span>
-</footer>
-
 </div>
-</body>
-</html>
+<footer>這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
+  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>
+</div></body></html>

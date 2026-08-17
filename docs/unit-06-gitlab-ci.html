@@ -3,151 +3,224 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>單元 6 · GitLab CI/CD · GitLab 繁中教學站</title>
-<meta name="description" content="GitLab CI/CD：.gitlab-ci.yml、Runners、Pipeline、stages。">
+<title>單元 6 · GitLab CI · GitLab 繁體中文教學站</title>
+<meta name="description" content=".gitlab-ci.yml 結構、stages/jobs/runners/artifacts/variables、完整 pipeline 範例">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
 <link rel="stylesheet" href="../assets/site.css">
 </head>
 <body>
 <div class="container">
-
 <header>
-  <h1>單元 6 · GitLab CI/CD</h1>
-  <p class="subtitle">內建 pipeline 自動化 — GitLab CI/CD</p>
+  <h1>單元 6 · GitLab CI</h1>
+  <p class="subtitle">pipeline、stages、jobs、runners、artifacts</p>
 </header>
-
 <nav class="topnav">
   <a href="../index.html">首頁</a>
   <a href="../map.html">概念地圖</a>
   <a href="../learning-path.html">學習路線</a>
-  <a href="index.html">單元教學</a>
+  <a href="../docs/index.html">單元教學</a>
+  <a href="../glossary.html">術語表</a>
   <a href="../about.html">關於</a>
-</nav>
-
-<div class="back-link"><a href="index.html">← 單元教學</a></div>
-
+</nav><div class="back-link"><a href="index.html">← 單元教學</a></div>
 <div class="guide">
+<h2>6.1 什麼是 CI/CD</h2>
+<p><strong>CI（持續整合）</strong>：每次 push 就自動<strong>建置＋測試</strong>，及早抓壞；
+<strong>CD（持續交付/部署）</strong>：驗證通過後<strong>自動部署</strong>到對應環境。
+GitLab 把整套 CI/CD <strong>內建</strong>——寫一個 <code>.gitlab-ci.yml</code>，push 就自動跑。</p>
+<div class="callout"><strong>GitLab 的招牌：</strong>不必另接 Travis / Jenkins / CircleCI。
+CI 是產品的一等公民，MR 頁直接內嵌 pipeline 結果。</div>
 
-  <div class="callout">
-    <strong>GitLab 的招牌：</strong>CI/CD 是<strong>內建</strong>的，不必另找服務——
-    寫一個 <code>.gitlab-ci.yml</code>，push 就自動跑測試、建置、部署。
-  </div>
+<h2>6.2 核心概念</h2>
+<table>
+<tr><th>名詞</th><th>意義</th><th>類比</th></tr>
+<tr><td><strong>Pipeline</strong></td><td>一次完整的 CI/CD 流程（由 stages 組成）</td><td>一整條生產線</td></tr>
+<tr><td><strong>Stage</strong></td><td>流程階段，<strong>依序執行</strong></td><td>工作站</td></tr>
+<tr><td><strong>Job</strong></td><td>實際執行的任務，屬於某個 stage</td><td>工作站上的工序</td></tr>
+<tr><td><strong>Runner</strong></td><td>執行 job 的機器</td><td>工人</td></tr>
+<tr><td><strong>Artifact</strong></td><td>job 產出物（可傳給下一 stage）</td><td>半成品</td></tr>
+<tr><td><strong>Variable</strong></td><td>環境變數（機密放 CI/CD variables）</td><td>作業規範</td></tr>
+</table>
+<div class="callout info"><strong>執行規則：</strong>同一 stage 的 job 可<strong>平行</strong>跑；stage 之間
+<strong>依序</strong>（前一 stage 全成功才進下一 stage）。任一 job 失敗 → pipeline 變紅。</div>
 
-  <h2>核心概念 · Core Concepts</h2>
-  <table>
-    <tr><th>名詞</th><th>意義</th></tr>
-    <tr><td><strong>Pipeline</strong></td><td>一次完整的 CI/CD 流程（由 stages 組成）</td></tr>
-    <tr><td><strong>Stage</strong></td><td>流程階段（build → test → deploy），依序執行</td></tr>
-    <tr><td><strong>Job</strong></td><td>實際執行的任務，屬於某個 stage</td></tr>
-    <tr><td><strong>Runner</strong></td><td>執行 job 的機器（可自架/共享）</td></tr>
-    <tr><td><strong>Artifact</strong></td><td>job 產出物（可傳給下一 stage）</td></tr>
-    <tr><td><strong>Variable</strong></td><td>環境變數（含 CI/CD variables，類似 secrets）</td></tr>
-  </table>
-
-  <h2>第一個 .gitlab-ci.yml</h2>
-  <p>放在專案根目錄：</p>
-  <div class="demo-block">
-    <div class="demo-label">.gitlab-ci.yml</div>
-    <pre><span class="hl-k">stages</span>:
+<h2>6.3 .gitlab-ci.yml 結構</h2>
+<p>放在專案<strong>根目錄</strong>。最簡單的骨架：</p>
+<div class="demo-block">
+  <div class="demo-label">.gitlab-ci.yml</div>
+  <pre><span class="hl-k">stages</span>:
+  <span class="hl-p">-</span> <span class="hl-s">build</span>
   <span class="hl-p">-</span> <span class="hl-s">test</span>
   <span class="hl-p">-</span> <span class="hl-s">deploy</span>
 
-<span class="hl-k">test-job</span>:
-  <span class="hl-k">stage</span>: <span class="hl-s">test</span>
+<span class="hl-k">build-app</span>:
+  <span class="hl-k">stage</span>: <span class="hl-s">build</span>
   <span class="hl-k">image</span>: <span class="hl-s">node:20</span>
   <span class="hl-k">script</span>:
     <span class="hl-p">-</span> <span class="hl-s">npm ci</span>
-    <span class="hl-p">-</span> <span class="hl-s">npm test</span>
+    <span class="hl-p">-</span> <span class="hl-s">npm run build</span>
+  <span class="hl-k">artifacts</span>:
+    <span class="hl-k">paths</span>: <span class="hl-p">[</span>dist/<span class="hl-p">]</span>
 
-<span class="hl-k">deploy-job</span>:
+<span class="hl-k">test-app</span>:
+  <span class="hl-k">stage</span>: <span class="hl-s">test</span>
+  <span class="hl-k">image</span>: <span class="hl-s">node:20</span>
+  <span class="hl-k">script</span>:
+    <span class="hl-p">-</span> <span class="hl-s">npm test</span>
+  <span class="hl-k">needs</span>: <span class="hl-p">[</span>build-app<span class="hl-p">]</span>
+
+<span class="hl-k">deploy-app</span>:
   <span class="hl-k">stage</span>: <span class="hl-s">deploy</span>
   <span class="hl-k">script</span>:
-    <span class="hl-p">-</span> <span class="hl-s">echo "deploying"</span>
-  <span class="hl-k">only</span>:
-    <span class="hl-p">-</span> <span class="hl-s">main</span></pre>
-  </div>
-  <div class="callout info">
-    <strong>解讀：</strong>push 後 GitLab 建一個 pipeline → test 階段先跑（node 映像環境執行
-    npm ci / npm test）→ 只有 main 分支才跑 deploy 階段。任一 job 失敗，pipeline 變紅。
-  </div>
+    <span class="hl-p">-</span> <span class="hl-s">echo "deploying to prod"</span>
+  <span class="hl-k">rules</span>:
+    <span class="hl-p">-</span> <span class="hl-k">if</span>: <span class="hl-s">'$CI_COMMIT_BRANCH == "main"'</span></pre>
+</div>
+<div class="callout info"><strong>解讀：</strong>push 後建一條 pipeline → build 先跑（產出 <code>dist/</code> 當 artifact）
+→ test 依賴 build（<code>needs</code> 可跳過 stage 順序）→ 只有 main 分支才 deploy。</div>
 
-  <h2>Runners · 執行機器</h2>
-  <p>
-    GitLab CI 需要 <strong>Runner</strong> 執行 job。GitLab.com 提供共享 runner（免費額度），
-    自架 GitLab 則要自己裝 runner（在公司的機器上跑，程式碼不出公司）。
-  </p>
-  <div class="demo-block">
-    <div class="demo-label">Runner 類型 · RUNNERS</div>
-    <pre>Shared runners   <span class="hl-c"># GitLab.com 提供，免費額度有限</span>
-Specific runners <span class="hl-c"># 專屬機器，可指定標籤</span>
-Group runners    <span class="hl-c"># 整個群組共用</span>
+<h2>6.4 stages 與 job 的執行順序</h2>
+<ul>
+<li><strong>預設 stage</strong> 順序：<code>build → test → deploy</code>（未寫 stages 時）。</li>
+<li>自訂 stages 決定順序；省略 stage 的 job 會跑到 <code>test</code>。</li>
+<li><strong>DAG</strong>：用 <code>needs:</code> 讓 job 不等整個 stage，只等它依賴的 job——大幅加速大型 pipeline。</li>
+</ul>
 
-gitlab-runner register   <span class="hl-c"># 註冊一台 runner</span></pre>
-  </div>
+<h2>6.5 Runners：執行機器</h2>
+<p>GitLab 本身不執行 job，需要 <strong>Runner</strong>：</p>
+<div class="demo-block">
+  <div class="demo-label">Runner 類型 · RUNNERS</div>
+  <pre>Shared runners     <span class="hl-c"># GitLab.com 提供，免費額度有限（分鐘計）</span>
+Group runners      <span class="hl-c"># 整個群組共用</span>
+Specific runners   <span class="hl-c"># 專屬機器，可用 tags 指定</span>
 
-  <h2>Variables 與 Secrets</h2>
-  <p>機密值用 <strong>CI/CD variables</strong>（Settings → CI/CD → Variables），不寫進 YAML。</p>
-  <div class="demo-block">
-    <div class="demo-label">使用變數 · VARIABLES</div>
-    <pre><span class="hl-c"># 設定：Settings → CI/CD → Variables → 新增</span>
-<span class="hl-c"># 名稱：DEPLOY_TOKEN</span>
+# 自架 GitLab 安裝 runner：
+sudo gitlab-runner register
+  # URL + registration token（群組/專案取得）
+  # executor：shell / docker / kubernetes</pre>
+</div>
+<div class="callout warn"><strong>自架 runner 的意義：</strong>測試機、內網服務、GPU、公司內部套件——
+都能用「自己的機器」當 runner。對自架 GitLab 而言這是標準配備，也是「程式碼不出公司」的最後一哩。</div>
+
+<h2>6.6 Artifacts 與 Cache</h2>
+<table>
+<tr><th>機制</th><th>目的</th><th>範例</th></tr>
+<tr><td><strong>Artifact</strong></td><td>把產出<strong>傳給之後的 job</strong>，或留給人下載</td><td>編譯檔、測試報告、Pages 的 public/</td></tr>
+<tr><td><strong>Cache</strong></td><td>加速<strong>依賴安裝</strong>（同 job 重跑時重用）</td><td>.npm/、pip cache、vendor/bundle</td></tr>
+</table>
+<div class="demo-block">
+  <div class="demo-label">關鍵字 · KEYWORDS</div>
+  <pre><span class="hl-k">artifacts</span>:
+  <span class="hl-k">paths</span>: <span class="hl-p">[</span>dist/<span class="hl-p">]</span>          <span class="hl-c"># 產出目錄</span>
+  <span class="hl-k">expire_in</span>: <span class="hl-s">1 week</span>        <span class="hl-c"># 保留期限</span>
+  <span class="hl-k">when</span>: <span class="hl-s">on_success</span>
+
+<span class="hl-k">cache</span>:
+  <span class="hl-k">key</span>: <span class="hl-s">$CI_COMMIT_REF_SLUG</span>  <span class="hl-c"># 依分支分開快取</span>
+  <span class="hl-k">paths</span>: <span class="hl-p">[</span>.npm/<span class="hl-p">]</span></pre>
+</div>
+<div class="callout warn"><strong>別搞混：</strong>artifact 是「產出給後面的用」，cache 是「加速自己的安裝」。
+cache 不保證可用（可能被清），artifact 是保證可下載的。</div>
+
+<h2>6.7 Variables 與內建 CI_* 變數</h2>
+<p>機密值（金鑰、token）放 <strong>Settings → CI/CD → Variables</strong>，不寫進 YAML：</p>
+<div class="demo-block">
+  <div class="demo-label">使用變數 · VARIABLES</div>
+  <pre><span class="hl-c"># 設定：Settings → CI/CD → Variables</span>
+<span class="hl-c"># DEPLOY_TOKEN（勾 Masked → 日誌中自動遮罩）</span>
 
 <span class="hl-k">deploy-job</span>:
   <span class="hl-k">script</span>:
-    <span class="hl-p">-</span> <span class="hl-s">echo "using $DEPLOY_TOKEN"</span>  <span class="hl-c"># 不要 echo 機密！</span>
+    <span class="hl-p">-</span> <span class="hl-s">curl -H "Authorization: Bearer $DEPLOY_TOKEN" ...</span>
   <span class="hl-k">rules</span>:
-    <span class="hl-p">-</span> <span class="hl-k">if</span>: <span class="hl-s">'$CI_COMMIT_BRANCH == "main"'</span></pre>
-  </div>
-  <div class="callout warn">
-    <strong>內建變數：</strong>GitLab 提供大量 <code>CI_*</code> 內建變數（分支、commit、MR 資訊）。
-    <code>rules: if</code> 可用它們做條件控制。機密變數記得勾選「Masked」。
-  </div>
+    <span class="hl-p">-</span> <span class="hl-k">if</span>: <span class="hl-s">'$CI_COMMIT_BRANCH == "main" &amp;&amp; $DEPLOY_ENABLED == "true"'</span></pre>
+</div>
+<p>常用內建變數：<code>$CI_COMMIT_SHA</code>（commit）、<code>$CI_COMMIT_BRANCH</code>（分支）、
+<code>$CI_MERGE_REQUEST_IID</code>（MR 編號）、<code>$CI_JOB_NAME</code>、<code>$CI_PROJECT_PATH</code>。</p>
+<div class="callout warn"><strong>絕對不要 <code>echo $SECRET</code>：</strong>即使 Masked 也可能從日誌洩漏
+變數值（例如在 URL 或錯誤訊息中）。機密一律只用在「不印出」的地方。</div>
 
-  <h2>Job 的其他常用欄位</h2>
-  <div class="demo-block">
-    <div class="demo-label">常用欄位 · KEYWORDS</div>
-    <pre><span class="hl-k">image</span>: <span class="hl-s">python:3.12</span>       <span class="hl-c"># 執行環境</span>
-<span class="hl-k">before_script</span>: <span class="hl-p">[</span><span class="hl-s">pip install -r req.txt</span><span class="hl-p">]</span>   <span class="hl-c"># job 前</span>
-<span class="hl-k">artifacts</span>:
-  <span class="hl-k">paths</span>: <span class="hl-p">[</span>dist/<span class="hl-p">]</span>      <span class="hl-c"># 產出物傳給下一 stage</span>
-<span class="hl-k">cache</span>:
-  <span class="hl-k">paths</span>: <span class="hl-p">[</span>.npm/<span class="hl-p">]</span>       <span class="hl-c"># 快取加速</span>
-<span class="hl-k">when</span>: <span class="hl-s">on_success</span>       <span class="hl-c"># 失敗也跑：always</span>
-<span class="hl-k">needs</span>: <span class="hl-p">[</span>test-job<span class="hl-p">]</span>  <span class="hl-c"># 跳過 stage 順序直接依賴</span></pre>
-  </div>
+<h2>6.8 rules / only / when</h2>
+<ul>
+<li><code>rules:</code> 現代的條件控制（多條件可用 <code>and</code> / <code>||</code>），優先使用。</li>
+<li><code>only/except</code> 舊語法，較死板，新專案建議用 <code>rules</code>。</li>
+<li><code>when: on_success / on_failure / always / manual</code>：控制執行時機，<code>manual</code> 可做「手動部署按鈕」。</li>
+</ul>
 
-  <h2>把 CI 接上 MR 門檻</h2>
-  <p>在 MR 上，pipeline 結果會顯示（✔ / ✘）。結合保護分支設定「Pipelines must succeed」，
-  CI 沒過就不能合併——品質第一道防線。</p>
+<h2>6.9 Worked Example：完整 pipeline 範例</h2>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">.gitlab-ci.yml · SOURCE</div><pre>stages: [build, test, deploy]
+
+build-job:
+  stage: build
+  image: node:20
+  script:
+    - npm ci
+    - npm run build
+  artifacts:
+    paths: [dist/]
+
+test-job:
+  stage: test
+  image: node:20
+  script:
+    - npm test
+  needs: [build-job]
+
+deploy-staging:
+  stage: deploy
+  image: node:20
+  script:
+    - npm ci
+    - npm run deploy:staging
+  environment: staging
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+
+deploy-prod:
+  stage: deploy
+  script:
+    - echo "release to prod"
+  environment: production
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual     # 手動按鈕才部署正式</pre></div>
+  <div class="demo-block"><div class="demo-label">Pipeline · RENDERED</div><div class="demo-render">
+    <p><strong>build</strong> → <code>build-job</code>（npm ci + build，存 dist/）</p>
+    <p><strong>test</strong> → <code>test-job</code>（依賴 build-job，npm test）</p>
+    <p><strong>deploy</strong> → <code>deploy-staging</code>（develop 分支）<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; → <code>deploy-prod</code>（main 分支，<em>manual</em> 手動觸發）</p>
+    <p class="hint">develop 自動上 staging，main 需人工批准才上 production——常見的「環境階梯」。</p>
+  </div></div>
+</div>
+
+<h2>6.10 把 CI 接上 MR 門檻</h2>
+<p>MR 上會直接顯示 pipeline 結果（✔ / ✘）。結合保護分支勾選「Pipelines must succeed」，
+CI 沒過就<strong>不能合併</strong>——品質的第一道自動防線（複習單元 4）。</p>
+
+<h2>6.11 練習</h2>
+<ul>
+<li>為你的專案加一份最小 .gitlab-ci.yml（兩個 job），push 觀察 pipeline 跑起來。</li>
+<li>故意讓測試失敗一次，看 MR 上 pipeline 變紅、Merge 被擋。</li>
+<li>練習 <code>rules: if</code> 只在 main 部署，並加入一個 <code>when: manual</code> job。</li>
+</ul>
 
   <div class="outcome">
-    <strong>看完這頁你應該能說出：</strong>
-    <ul>
-      <li>Pipeline / Stage / Job / Runner 的關係。</li>
-      <li>寫一份最小的 .gitlab-ci.yml。</li>
-      <li>Runner 的角色與自架 CI 的意義。</li>
-      <li>Variables 與內建 CI_* 變數的用法。</li>
-      <li>如何用 pipeline 當合併門檻。</li>
-    </ul>
+    <strong>看完這單元你應該能說出：</strong>
+    <ul><li>說出 Pipeline / Stage / Job / Runner / Artifact 五個名詞的關係。</li><li>從零寫出一份最小的 .gitlab-ci.yml（stages + 兩個 job）。</li><li>用 rules: if 搭配 CI_* 內建變數做條件控制（例如只在 main 部署）。</li><li>用 artifacts 傳遞產出物、用 cache 加速，並說明兩者差別。</li><li>解釋自架 runner 的意義，並把 CI 設成 MR 的合併門檻。</li></ul>
   </div>
 
   <h2>延伸閱讀</h2>
   <ul>
-    <li>下一篇：<a href="unit-07-gitlab-pages.html">單元 7 · GitLab Pages</a>。</li>
-    <li><a href="https://docs.gitlab.com/ee/ci/" rel="noopener">GitLab Docs: CI/CD</a></li>
-  </ul>
+<li>上一篇：<a href="unit-05-issues-boards.html">單元 5 · Issues 與 Boards</a>。</li>
+<li>下一篇：<a href="unit-07-gitlab-pages.html">單元 7 · GitLab Pages</a>。</li>
+<li><a href="../glossary.html">術語表</a>：複習全站。</li>
+</ul>
 
-  <div class="next-prev">
-    <a href="unit-05-issues-boards.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 5 · Issues 與專案管理</div></a>
+<div class="next-prev">
+    <a href="unit-05-issues-boards.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 5 · Issues 與 Boards</div></a>
     <a class="np-next" href="unit-07-gitlab-pages.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 7 · GitLab Pages</div></a>
-  </div>
 </div>
-
-<footer>
-  這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
-  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span>
-</footer>
-
 </div>
-</body>
-</html>
+<footer>這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
+  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>
+</div></body></html>

@@ -3,137 +3,168 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>單元 5 · Issues 與專案管理 · GitLab 繁中教學站</title>
-<meta name="description" content="GitLab Issues、labels、milestones、Boards 看板。">
+<title>單元 5 · Issues 與 Boards · GitLab 繁體中文教學站</title>
+<meta name="description" content="Issue、scoped labels、Milestone、Boards Kanban、weight、Epic">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
 <link rel="stylesheet" href="../assets/site.css">
 </head>
 <body>
 <div class="container">
-
 <header>
-  <h1>單元 5 · Issues 與專案管理</h1>
-  <p class="subtitle">任務、分類、里程碑與看板 — Issues &amp; Boards</p>
+  <h1>單元 5 · Issues 與 Boards</h1>
+  <p class="subtitle">Issue、label、里程碑、看板、weight</p>
 </header>
-
 <nav class="topnav">
   <a href="../index.html">首頁</a>
   <a href="../map.html">概念地圖</a>
   <a href="../learning-path.html">學習路線</a>
-  <a href="index.html">單元教學</a>
+  <a href="../docs/index.html">單元教學</a>
+  <a href="../glossary.html">術語表</a>
   <a href="../about.html">關於</a>
-</nav>
-
-<div class="back-link"><a href="index.html">← 單元教學</a></div>
-
+</nav><div class="back-link"><a href="index.html">← 單元教學</a></div>
 <div class="guide">
-
-  <p>
-    GitLab 的專案管理與 GitHub 概念相近，但有些獨特設計——
-    尤其 <strong>Issue Boards</strong> 與 <strong>Milestones</strong> 的整合很深。
-  </p>
-
-  <h2>Issues · 任務與 Bug</h2>
-  <p>與 GitHub 相同：一件事一張單、有編號（<code>#12</code>）、可留言與指派。</p>
-  <div class="demo-block">
-    <div class="demo-label">Issue 寫法 · FORMAT</div>
-    <pre>標題：登入頁在 Safari 上空白
+<h2>5.1 Issues：任務與 Bug 的單元</h2>
+<p>與 GitHub 相同：一件事一張單、有編號（<code>#12</code>）、可留言、指派與標籤。
+但 GitLab 的 Issue 與 MR 的整合更深（<code>Closes</code>、Boards、Milestone 全打通）。</p>
+<div class="demo-block">
+  <div class="demo-label">Issue 寫法 · FORMAT</div>
+  <pre>標題：登入頁在 Safari 上空白
 描述：
   步驟：
   1. 開 Safari 到 /login
   2. 畫面空白
   預期：顯示表單
-  環境：Safari 17</pre>
-  </div>
+  實際：白畫面（console 有 500）
+  環境：Safari 17, macOS 15
+  標籤：bug, priority::high</pre>
+</div>
+<div class="callout warn"><strong>Issue 品質決定協作品質：</strong>「畫面壞了」是無效 issue；
+「步驟＋預期＋實際＋環境」是可複現、可驗收的 issue。寫好「重現步驟」是工程師的基本功。</div>
 
-  <h2>Labels · 標籤</h2>
-  <p>內建常用的預設標籤，也可自訂：</p>
-  <div class="demo-block">
-    <div class="demo-label">常見標籤 · LABELS</div>
-    <pre><span class="hl-k">bug</span>  <span class="hl-k">feature</span>  <span class="hl-k">documentation</span>
+<h2>5.2 Labels · 標籤</h2>
+<p>GitLab 內建常見預設標籤，也可自訂。特色是 <strong>scoped labels</strong>：</p>
+<div class="demo-block">
+  <div class="demo-label">常見標籤 · LABELS</div>
+  <pre><span class="hl-k">bug</span>  <span class="hl-k">feature</span>  <span class="hl-k">documentation</span>
 <span class="hl-k">good first issue</span>  <span class="hl-k">help wanted</span>
-<span class="hl-k">priority::high</span>    <span class="hl-c"># GitLab 支援「scope::」命名</span></pre>
-  </div>
-  <p class="hint">GitLab 建議用 <code>type::</code>、<code>priority::</code> 字首統一標籤命名（「scoped labels」）。</p>
 
-  <h2>Milestones · 里程碑</h2>
-  <p>把 issue / MR 歸到一個里程碑，追蹤整體進度。</p>
-  <div class="demo-block">
-    <div class="demo-label">Milestone 範例 · EXAMPLE</div>
-    <pre>v1.0 發布（2026-10-01）
+<span class="hl-c"># Scoped labels：同一個字首只會掛一個</span>
+type::bug        type::feature
+priority::high   priority::low
+do::1（待辦）     do::2（進行中）  review   done</pre>
+</div>
+<div class="callout info"><strong>Scoped labels 的威力：</strong>一張 issue 只能有一個 <code>priority::</code>，
+系統會自動排除衝突。這讓「篩選」與「看板欄位」可以靠標籤自動對應——GitLab 的工程團隊文化常見到
+<code>type::</code> / <code>priority::</code> / <code>do::</code> 三組字首。</div>
+
+<h2>5.3 Milestones · 里程碑</h2>
+<p>把 issue / MR 歸到一個里程碑，追蹤整體進度——GitLab 的獨特點是<strong>同時掛 issue 與 MR</strong>：</p>
+<div class="demo-block">
+  <div class="demo-label">Milestone 範例 · EXAMPLE</div>
+  <pre>v1.0 發布（2026-10-01）
   ├─ #10 修登入 bug（open）
   ├─ #12 新增搜尋（open）
-  └─ #15 文件（closed）
-  進度：1/3</pre>
-  </div>
-  <div class="callout">
-    <strong>特色：</strong>GitLab 的 Milestone 同時掛 issue 與 MR——合併的 MR 會自動算進進度，
-    對齊「這個版本做了什麼」。
-  </div>
+  ├─ #15 文件（closed）
+  └─ !34 搜尋後端（merged，自動計入）
+  進度：2/4</pre>
+</div>
+<div class="callout"><strong>特色：</strong>MR 合併後自動算進 milestone 進度——「這個版本做了什麼」
+由資料自動回答，不用人工統計。</div>
 
-  <h2>Issue Boards · 看板</h2>
-  <p>類似 GitHub Projects 的看板，但更接近 Trello：以 label 或 milestone 定義欄位。</p>
-  <div class="demo-block">
-    <div class="demo-label">看板 · BOARD</div>
-    <pre>┌─ To do ──┬─ Doing ──┬─ Review ──┬─ Done ──┐
+<h2>5.4 Issue Boards · 看板（Kanban）</h2>
+<p>類似 GitHub Projects，但更接近 Trello；欄位通常由 label 定義：</p>
+<div class="demo-block">
+  <div class="demo-label">看板 · BOARD</div>
+  <pre>┌─ To do ──┬─ Doing ──┬─ Review ──┬─ Done ──┐
 │ #10      │ #12       │           │ #15     │
+│ #16      │           │           │         │
 └──────────┴───────────┴───────────┴──────────┘
-欄位通常對應 label：do::1 / do::2 / review / done</pre>
-  </div>
-  <div class="callout info">
-    <strong>進階：</strong>可建立<strong>多個 board</strong>（依產品、依團隊）、
-    加「wip limit」（進行中數量上限）——比 GitHub Projects 更「工程團隊」導向。
-  </div>
+   do::1       do::2       review      done
+   （欄位由 scoped label 對應）</pre>
+</div>
+<div class="callout warn"><strong>WIP Limit（進行中上限）：</strong>「Doing」欄可設上限（例如 3）——
+超過就代表團隊同時做太多。WIP limit 是 Kanban 的核心紀律，逼團隊<strong>一件做完再做下一件</strong>。</div>
+<div class="callout info"><strong>多個 Board：</strong>可依產品、依團隊建多個 board；
+加上「依 milestone 篩選」的 view——大型專案可以做到「每週站會看板就更新」。</div>
 
-  <h2>Epics · 史詩</h2>
-  <p>群組層級的「大目標」，底下掛多個 issue——GitLab 特有（EE/付費才有完整功能）。</p>
-  <div class="demo-block">
-    <div class="demo-label">Epic 範例 · EXAMPLE</div>
-    <pre>Epic：2026 上半年使用者體驗
+<h2>5.5 Weight · 工作量</h2>
+<p>Issue 可設 <code>weight</code>（工作量估算，如 1–5）。配上看板的 <code>Total weight</code>
+可估算 sprint 負載；配對 milestone 可追蹤「這個版本總工作量剩多少」。</p>
+<div class="demo-block">
+  <div class="demo-label">Weight 範例 · WEIGHT</div>
+  <pre>#12 新增搜尋        weight: 3
+#10 修登入 bug       weight: 1
+#16 設定頁重構       weight: 5   <span class="hl-c"># 大工程，拆細更好</span>
+里程碑總計：9，已完成 4</pre>
+</div>
+<div class="callout warn"><strong>別太迷信數字：</strong>weight 是相對估算不是工時保證。
+重點是讓「分派不均」與「範圍膨脹」現形，而不是精準預測時程。</div>
+
+<h2>5.6 Epics · 史詩（群組層級）</h2>
+<p>Epic 是群組層級的「大目標」，底下掛多個 issue——GitLab 特有（EE/付費才有完整功能）：</p>
+<div class="demo-block">
+  <div class="demo-label">Epic 範例 · EXAMPLE</div>
+  <pre>Epic：2026 上半年使用者體驗
   ├─ #20 新版登入
   ├─ #21 暗色模式
-  └─ #22 載入動畫</pre>
-  </div>
+  ├─ #22 載入動畫
+  └─ 進度由底下 issue 自動彙總</pre>
+</div>
+<p>用 Epic 組織「大到一個 issue 裝不下」的工作，例如一整個季度的產品方向。</p>
 
-  <h2>Wiki · 文件</h2>
-  <p>每個專案內建 Wiki（Markdown），適合長文件。跟 GitHub 的 Wiki 定位相同。</p>
+<h2>5.7 Wiki · 專案文件</h2>
+<p>每個專案內建 Wiki（Markdown 撰寫），適合長文件與 SOP，定位與 GitHub Wiki 相同。
+可與 CI 結合做成「自動生成文件」。（本站型態就是「Docs-as-Code」的另一種做法。）</p>
 
-  <h2>完整工作流</h2>
-  <div class="demo-block">
-    <div class="demo-label">工作流 · WORKFLOW</div>
-    <pre>1. 開 Issue（含 label 與 milestone）
-2. 開分支 → 開發 → 開 MR（Closes #12）
-3. CI 跑（單元 6）→ 有人 Approve
-4. 合併 → Issue 自動關閉、看板自動移動</pre>
-  </div>
+<h2>5.8 完整工作流 · The Loop</h2>
+<div class="demo-block">
+  <div class="demo-label">工作流 · WORKFLOW</div>
+  <pre>1. 開 Issue（label + milestone + weight）
+2. 從 Issue 一鍵開分支（feature/12-login-fix）
+3. 開發 → push → 開 MR（Closes #12）
+4. CI 跑（單元 6）→ 有人 Approve
+5. 合併 → Issue 自動關閉、看板自動移動、
+   milestone 進度自動更新</pre>
+</div>
+<div class="callout"><strong>閉環的意義：</strong>Issue → MR → Closes → 看板/里程碑 全部連動。
+管理者看板看到的就是最新事實，不必人工同步任何東西。</div>
+
+<h2>5.9 Worked Example：用看板管一個 sprint</h2>
+<div class="demo-grid">
+  <div class="demo-block"><div class="demo-label">設定 · SETUP</div><pre>1. 建 milestone「sprint-14」
+2. 開 5 張 issue（各帶 do::1）
+3. 設 Board 欄：do::1 / do::2 / review / done
+4. Doing 欄 wip limit = 3
+5. 每天把「正在做的」拖到 do::2</pre></div>
+  <div class="demo-block"><div class="demo-label">驗收 · CHECKLIST</div><div class="demo-render">
+    <p>✅ 每張 issue 有 label + milestone<br>✅ 看板欄位與 label 對應<br>✅ Doing 不超過 3 張<br>✅ 合併 MR 後 issue 自動關、看板自動移</p>
+  </div></div>
+</div>
+
+<h2>5.10 練習</h2>
+<ul>
+<li>建立 3 張 issue，用 type:: / priority:: / do:: 標籤分類，再建看板把欄位對上。</li>
+<li>設 milestone 並觀察「MR 合併後進度自動跳」。</li>
+<li>給一張難度差異大的 issue 設 weight，比較實際花費時間。</li>
+</ul>
 
   <div class="outcome">
-    <strong>看完這頁你應該能說出：</strong>
-    <ul>
-      <li>Issue、Label、Milestone 的基本用法。</li>
-      <li>GitLab 的 scoped labels 命名習慣。</li>
-      <li>Issue Boards 與 Epic 的特色。</li>
-      <li>Issue → MR → Closes 的完整循環。</li>
-    </ul>
+    <strong>看完這單元你應該能說出：</strong>
+    <ul><li>寫出一張結構清楚的 Issue（含步驟、預期、實際、環境）。</li><li>建立 label 並用 type:: / priority:: 等 scoped labels 統一命名。</li><li>把 issue 與 MR 掛進 milestone，讀懂版本進度。</li><li>建立 Issue Board 看板（欄位對應 label），並說明 wip limit 的意義。</li><li>說明 weight、Epic、Wiki 在大型專案中的角色。</li></ul>
   </div>
 
   <h2>延伸閱讀</h2>
   <ul>
-    <li>下一篇：<a href="unit-06-gitlab-ci.html">單元 6 · GitLab CI/CD</a>——GitLab 的招牌。</li>
-    <li><a href="https://docs.gitlab.com/ee/user/project/boards.html" rel="noopener">GitLab Docs: Issue boards</a></li>
-  </ul>
+<li>上一篇：<a href="unit-04-merge-request.html">單元 4 · Merge Request 深入</a>。</li>
+<li>下一篇：<a href="unit-06-gitlab-ci.html">單元 6 · GitLab CI</a>。</li>
+<li><a href="../glossary.html">術語表</a>：複習全站。</li>
+</ul>
 
-  <div class="next-prev">
-    <a href="unit-04-merge-request.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 4 · Merge Request 協作</div></a>
-    <a class="np-next" href="unit-06-gitlab-ci.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 6 · GitLab CI/CD</div></a>
-  </div>
+<div class="next-prev">
+    <a href="unit-04-merge-request.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 4 · Merge Request 深入</div></a>
+    <a class="np-next" href="unit-06-gitlab-ci.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 6 · GitLab CI</div></a>
 </div>
-
-<footer>
-  這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
-  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span>
-</footer>
-
 </div>
-</body>
-</html>
+<footer>這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
+  <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>
+</div></body></html>
