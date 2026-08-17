@@ -164,6 +164,57 @@ do::1（待辦）     do::2（進行中）  review   done</pre>
     <a href="unit-04-merge-request.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 4 · Merge Request 深入</div></a>
     <a class="np-next" href="unit-06-gitlab-ci.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 6 · GitLab CI</div></a>
 </div>
+
+<!-- ═══════ Round 1 Deepen ═══════ -->
+<h2>進階真實情境 Worked Example</h2>
+<h3>情境：用 Issue + Milestone + Board 管理一個 Sprint</h3>
+<p>一個敏捷團隊每兩週一個 Sprint，需要從 Backlog 篩選工作、分配 weight、每日站會更新看板、Sprint 結束時統計完成率。</p>
+<div class="demo-block">
+  <div class="demo-label">Sprint 設定 · SETUP</div>
+  <pre><span class="hl-c"># 1. 建立 Milestone</span>
+Milestone: Sprint 2026-W34
+  Duration: 2026-08-18 → 2026-08-29
+
+<span class="hl-c"># 2. 開 Issue（全部帶 label）</span>
+#101 加入搜尋 API         type::feature  priority::high   do::1  weight: 5
+#102 修正登入 500 錯誤    type::bug      priority::high   do::1  weight: 2
+#103 文件更新             type::doc      priority::low    do::1  weight: 1
+#104 壓縮前端 bundle      type::chore    priority::medium do::1  weight: 3
+#105 設定頁 RWD           type::feature  priority::medium do::1  weight: 3
+
+<span class="hl-c"># 3. 建 Board：欄位 = do::1 / do::2 / review / done</span>
+<span class="hl-c"># 4. WIP limit：Doing（do::2）最多 3 張</span>
+<span class="hl-c"># 5. Sprint 篩選：在 Board 上方 Filter 設 milestone = Sprint 2026-W34</span></pre>
+</div>
+<div class="callout"><strong>每日站會：</strong>只看 Board 上 do::2（進行中）的卡片，確認是否有阻塞。Sprint 結束時在 Milestone 頁檢視「關閉的 issue / 總 issue」比率即為完成率。</div>
+
+<h2>深入原理擴充</h2>
+<h3>Scoped Labels 的互斥機制</h3>
+<p>Scoped labels 是 GitLab 獨有的強大功能。當你在一個 issue 上加入 <code>do::2（進行中）</code>，系統會自動移除同字首的 <code>do::1（待辦）</code>——實現「單選」效果。</p>
+<table>
+<tr><th>字首都</th><th>選項範例</th><th>行為</th></tr>
+<tr><td><code>do::</code></td><td>do::1、do::2、review、done</td><td>一張 issue 同時只能有一個 do:: 值</td></tr>
+<tr><td><code>priority::</code></td><td>priority::high、priority::low</td><td>只能一個優先級</td></tr>
+<tr><td><code>type::</code></td><td>type::bug、type::feature</td><td>只能一個類型</td></tr>
+</table>
+<div class="callout info"><strong>底層原理：</strong>GitLab 用 <code>::</code> 作為 scoped delimiter。加入新 label 時，系統搜尋同字首都的既有 label 並自動移除。這讓 Board 的欄位拖曳、篩選器都可靠 label 自動對應，無需手動維護狀態。</div>
+
+<h2>診斷式疑難排解表</h2>
+<table>
+<tr><th>症狀</th><th>可能原因</th><th>解決方案</th></tr>
+<tr><td>Issue 拖曳到 Board 新欄位後，label 沒有自動更新</td><td>欄位對應的 label 名稱拼寫不完全一致（含空格或大小寫差異）</td><td>到 Board 設定確認欄位對應的 label，確保與 issue 上的 label 完全相同</td></tr>
+<tr><td>Milestone 進度沒有包含某個 MR</td><td>MR 的 target 分支不在此 milestone 的專案，或 MR 未被合併</td><td>確認 MR 已 merged 且 target 在同一專案；Milestone 只統計已合併的 MR</td></tr>
+<tr><td>看板出現「幽靈卡片」——Issue 已關閉但仍顯示</td><td>Board 設定未排除已關閉的 issue</td><td>在 Board 篩選器加入 <code>state=opened</code>，或檢查 Board 是否設為「顯示所有」</td></tr>
+<tr><td>Epic 進度百分比不正確</td><td>Epic 底下的 issue 有的不在同一群組，或 weight 未設定</td><td>Epic 只能追蹤同群組下的 issue；確認所有子 issue 都有設定 weight</td></tr>
+<tr><td>多個 Board 之間的 issue 重複顯示</td><td>Board 的 filter 設定重疊（例如一個按 milestone、一個沒篩選）</td><td>為每個 Board 設明確的 filter（milestone + label），避免交叉顯示</td></tr>
+</table>
+
+<h2>進階挑戰題</h2>
+<ol>
+<li><strong>Issue 模板設計：</strong>為「Bug 報告」與「Feature Request」各設計一個 Issue 模板（放在 <code>.gitlab/issue_templates/</code>），說明模板中應包含哪些欄位（步驟、預期、實際、優先級、相關 MR）。</li>
+<li><strong>Epic 與 Milestone 的差異分析：</strong>用一個「開發新會員系統」的例子，說明 Epic（長期目標）與 Milestone（短期交付）如何搭配使用，並畫出兩者的層級關係圖。</li>
+</ol>
+
 </div>
 <footer>這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>

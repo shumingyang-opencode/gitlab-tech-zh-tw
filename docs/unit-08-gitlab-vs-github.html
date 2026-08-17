@@ -205,6 +205,82 @@ EE 在開源核心上疊加企業功能
 <div class="next-prev">
     <a href="unit-07-gitlab-pages.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 7 · GitLab Pages</div></a>
 </div>
+
+<!-- ═══════ Round 1 Deepen ═══════ -->
+<h2>進階真實情境 Worked Example</h2>
+<h3>情境：企業從 GitHub 遷移到 GitLab 的完整流程</h3>
+<p>一家 50 人公司因資安法規要求「程式碼不出境」，決定從 GitHub.com 遷移到自架 GitLab CE。遷移涵蓋 12 個 repo、CI/CD 設定、Issue 與 MR 歷史。</p>
+<div class="demo-block">
+  <div class="demo-label">遷移步驟 · MIGRATION PLAN</div>
+  <pre><span class="hl-c"># 階段一：環境準備（1 週）</span>
+1. 自架 GitLab CE（Docker 部署）
+2. 註冊 Runner（Docker executor，tag: company）
+3. 設定 LDAP/SSO 整合公司帳號
+4. 設定 Protected Branches 規則
+
+<span class="hl-c"># 階段二：Repo 遷移（2 週，逐個 repo）</span>
+<span class="hl-c"># 用 GitLab 內建 Import（支援 GitHub 直接匯入）</span>
+5. GitLab → New project → Import project → GitHub
+6. 授權 GitLab 存取 GitHub repo
+7. 選擇要匯入的 repo → Import
+<span class="hl-c"># 包含：程式碼、Issues、MR、Label、Milestone</span>
+
+<span class="hl-c"># 階段三：CI/CD 遷移（每 repo 1-2 天）</span>
+8. 把 .github/workflows/ 轉換為 .gitlab-ci.yml
+9. 把 GitHub Secrets → GitLab CI/CD Variables
+10. 調整 Runner tag 與 image 設定
+11. 測試 pipeline 綠燈
+
+<span class="hl-c"># 階段四：DNS 與通知（1 天）</span>
+12. 更新內部文件中的所有 GitHub 連結
+13. 通知團隊新的 clone URL 與工作流程</pre>
+</div>
+<div class="callout"><strong>時間估算：</strong>12 個 repo 的完整遷移（含 CI 轉換）大約需要 3-4 週。關鍵瓶頸不在 repo 搬運（內建 Import 很快），而在 CI/CD 設定的轉換與測試。</div>
+
+<h2>深入原理擴充</h2>
+<h3>GitHub Actions 與 GitLab CI 的 YAML 結構對比</h3>
+<table>
+<tr><th>概念</th><th>GitHub Actions</th><th>GitLab CI</th></tr>
+<tr><td>設定檔位置</td><td><code>.github/workflows/*.yml</code>（多檔）</td><td><code>.gitlab-ci.yml</code>（單檔，可用 include 拆分）</td></tr>
+<tr><td>觸發條件</td><td><code>on: push / pull_request / schedule</code></td><td><code>rules: if / only / except</code>（隱含 push/MR 觸發）</td></tr>
+<tr><td>Job 定義</td><td><code>jobs: build: runs-on: ubuntu-latest</code></td><td><code>build-job: stage: build</code>（需先定義 stages）</td></tr>
+<tr><td>執行環境</td><td><code>runs-on:</code> 指定映像或 self-hosted</td><td><code>image:</code> 指定映像（配合 executor）</td></tr>
+<tr><td>步驟</td><td><code>steps: - run: / - uses: action@v3</code></td><td><code>script: - command</code>（純 shell）</td></tr>
+<tr><td>重複使用</td><td><code>uses: owner/action@v3</code>（市集）</td><td><code>include: project / template / component</code></td></tr>
+<tr><td>密鑰管理</td><td>Settings → Secrets</td><td>Settings → CI/CD → Variables</td></tr>
+</table>
+<div class="callout info"><strong>轉換心法：</strong>GitHub Actions 的 <code>uses: actions/checkout@v3</code> 在 GitLab CI 中不需要——GitLab Runner 自動 clone repo。主要轉換工作在於把 <code>steps</code> 攤平成 <code>script</code> 列表，並把 <code>on:</code> 觸發條件改為 <code>rules:</code>。</div>
+
+<h2>診斷式疑難排解表</h2>
+<table>
+<tr><th>症狀</th><th>可能原因</th><th>解決方案</th></tr>
+<tr><td>從 GitHub Import 後 Issues 沒有全部帶過來</td><td>GitHub API 有分頁限制，大量 Issues 時可能遺漏</td><td>用 GitLab 的 Rake task 手動重新匯入，或分批 Import</td></tr>
+<tr><td>GitLab CI 的 rules 條件不支援 GitHub Actions 的 cron schedule</td><td>GitLab CI 用 <code>cron:</code> 在 <code>only:</code> 或 <code>rules:</code> 中設定，語法不同</td><td>改用 <code>rules: - if: '$CI_PIPELINE_SOURCE == "schedule"'</code> 搭配專案的 Pipeline schedules 設定</td></tr>
+<tr><td>遷移後 clone URL 太長（含完整群組路徑）</td><td>GitLab 的 project 路徑包含 group/subgroup/project</td><td>設定 SSH remote（<code>git@gitlab.example.com:group/project.git</code>）比較簡潔</td></tr>
+<tr><td>GitLab 的 Container Registry 與 Docker Hub 衝突</td><td>CI script 中同時 push 到兩個 registry，認證混亂</td><td>在 CI Variables 分別設定兩組 credentials，script 中明確指定 <code>$CI_REGISTRY_IMAGE</code> 與 Docker Hub URL</td></tr>
+<tr><td>團隊成員混淆 MR 與 PR 的術語</td><td>長期使用 GitHub 的肌肉記憶</td><td>製作術語對照表貼在團隊 Slack/飛書頻道，過渡期用「MR（即 PR）」括號說明</td></tr>
+</table>
+
+<h2>進階挑戰題</h2>
+<ol>
+<li><strong>CI 轉換實戰：</strong>把以下 GitHub Actions workflow 轉換為 GitLab CI（.gitlab-ci.yml），並說明每個步驟的對應關係：
+<div class="demo-block"><div class="demo-label">GitHub Actions 原文</div><pre>on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npm test
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - run: echo "deploy"</pre></div></li>
+<li><strong>混合平台策略設計：</strong>一家公司同時使用 GitHub（開源專案）與 GitLab（內部專案），設計一個「共用 CI 元件」的方案——如何把 GitLab 的 CI template 在兩個平台間共享使用。</li>
+</ol>
+
 </div>
 <footer>這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>

@@ -153,6 +153,61 @@ git push -u origin main              <span class="hl-c"># -u 記憶 upstream，�
     <a href="unit-01-gitlab-intro.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 1 · GitLab 是什麼</div></a>
     <a class="np-next" href="unit-03-branches-mr.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 3 · 分支與 Merge Request</div></a>
 </div>
+
+<!-- ═══════ Round 1 Deepen ═══════ -->
+<h2>進階真實情境 Worked Example</h2>
+<h3>情境：建立多專案群組並用 Group Runner 自動化 CI</h3>
+<p>一個 15 人團隊，需要三個專案（前端、後端、共用函式庫），全部放在同一個群組下，共用一組自架 Runner。</p>
+<div class="demo-block">
+  <div class="demo-label">群組架構 · GROUP TREE</div>
+  <pre>myorg/                     ← Group
+├── frontend-app           ← Project（Visibility: Private）
+├── backend-api            ← Project（Visibility: Private）
+├── shared-ui-lib          ← Project（Visibility: Internal，全公司可讀）
+└── myorg.gitlab.io        ← Project（Visibility: Public，對外入口）
+
+<span class="hl-c"># Group Runner 註冊（在群組設定頁取得 token）</span>
+sudo gitlab-runner register \
+  --url https://gitlab.example.com \
+  --token &lt;GROUP_TOKEN&gt; \
+  --executor docker \
+  --tag-list "myorg" \
+  --run-untagged="false"
+
+<span class="hl-c"># 權限設計：</span>
+<span class="hl-c"># Owner → 技術主管（2人）</span>
+<span class="hl-c"># Maintainer → Team Lead（3人）</span>
+<span class="hl-c"># Developer → 開發者（10人）</span></pre>
+</div>
+<div class="callout"><strong>設計決策：</strong>① 共用函式庫設 Internal 讓公司內其他團隊可讀但不能改；② Runner 用 tag 過濾，只有 myorg 群組的專案才能使用此 Runner；③ 權限向下繼承：在 Group 設 Developer，三個專案自動都是 Developer。</div>
+
+<h2>深入原理擴充</h2>
+<h3>Namespace 與路由解析</h3>
+<p>GitLab 的 URL 路徑對應到內部的 <strong>Namespace</strong>（命名空間）。一個專案的完整路徑是 <code>namespace/project</code>，其中 namespace 可以是 User 或 Group。</p>
+<table>
+<tr><th>URL 路徑</th><th>Namespace 類型</th><th>專案歸屬</th></tr>
+<tr><td>gitlab.com/alice/hello</td><td>User（alice）</td><td>個人專案</td></tr>
+<tr><td>gitlab.com/myorg/backend-api</td><td>Group（myorg）</td><td>群組專案</td></tr>
+<tr><td>gitlab.com/myorg/platform/backend-api</td><td>Subgroup（myorg/platform）</td><td>子群組專案</td></tr>
+</table>
+<div class="callout warn"><strong>容易搞錯：</strong>Transfer 專案到新群組時，所有 clone URL 會變——已通知團隊更新 remote，否則下次 push 會失敗。</div>
+
+<h2>診斷式疑難排解表</h2>
+<table>
+<tr><th>症狀</th><th>可能原因</th><th>解決方案</th></tr>
+<tr><td>git push 顯示「remote: The project you were looking for could not be found」</td><td>遠端 URL 路徑錯誤（例如群組名拼錯）</td><td>執行 <code>git remote -v</code> 確認 URL，用 <code>git remote set-url origin</code> 修正</td></tr>
+<tr><td>看不到 Internal 專案</td><td>你在 GitLab.com（非自架），或帳號未登入</td><td>Internal 只在自架環境有效；確認已登入該 GitLab 實例</td></tr>
+<tr><td>Subgroup 裡的專案權限不符預期</td><td>Subgroup 有獨立的權限設定，覆蓋了上層 Group 的繼承</td><td>檢查 Subgroup → Members，確認是否有人為覆寫</td></tr>
+<tr><td>git clone 报 SSL certificate problem</td><td>自架 GitLab 使用自簽憑證，本機不信任</td><td>執行 <code>git config --global http.sslVerify false</code>（開發用），或匯入公司 CA 憑證</td></tr>
+<tr><td>專案路徑中有大寫字母被拒絕</td><td>GitLab slug 只允許小寫英文、數字、連字號、底線</td><td>專案名稱可含大寫，但路徑 slug 會自動轉小寫；建專案時直接用小寫命名</td></tr>
+</table>
+
+<h2>進階挑戰題</h2>
+<ol>
+<li><strong>群組權限例外設計：</strong>一個 30 人的群組中，有 2 個專案需要「外部承包商」也能 push（Developer），但承包商不能看到其他專案。設計權限方案並說明如何用 Subgroup 或專案層級覆寫達成。</li>
+<li><strong>從 GitHub 遷移到 GitLab：</strong>描述完整遷移步驟（含 Issues、MR、Label），並列出三個遷移後需要檢查的項目（CI 設定、Webhook、Protected Branches）。</li>
+</ol>
+
 </div>
 <footer>這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>

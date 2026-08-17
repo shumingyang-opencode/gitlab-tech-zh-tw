@@ -139,6 +139,67 @@ GitLab 收到 push
 <div class="next-prev">
     <a class="np-next" href="unit-02-first-project.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 2 · 第一個專案</div></a>
 </div>
+
+<!-- ═══════ Round 1 Deepen ═══════ -->
+<h2>進階真實情境 Worked Example</h2>
+<h3>情境：選擇 GitLab 自架部署企業內部 DevOps 環境</h3>
+<p>一家受金融法規規範的科技公司，要求「所有原始碼與 CI/CD 流程不得離開公司網路」。團隊決定自架 GitLab CE，並在同一台主機安裝 GitLab Runner，使用 Docker executor 執行 CI jobs。</p>
+<div class="demo-block">
+  <div class="demo-label">安裝流程 · DEPLOY</div>
+  <pre><span class="hl-c"># 1. 安裝 Docker（Ubuntu）</span>
+sudo apt update && sudo apt install docker.io -y
+
+<span class="hl-c"># 2. 用 Docker 單鍵部署 GitLab CE</span>
+sudo docker run -d \
+  --hostname gitlab.example.com \
+  --name gitlab \
+  -p 80:80 -p 443:443 -p 2222:22 \
+  -v /srv/gitlab/config:/etc/gitlab \
+  -v /srv/gitlab/logs:/var/log/gitlab \
+  -v /srv/gitlab/data:/var/opt/gitlab \
+  gitlab/gitlab-ce:latest
+
+<span class="hl-c"># 3. 等待啟動完成後，取得 root 初始密碼</span>
+sudo docker exec gitlab cat /etc/gitlab/initial_root_password
+
+<span class="hl-c"># 4. 註冊 Runner（群組層級，Docker executor）</span>
+sudo docker exec -it gitlab gitlab-runner register \
+  --url https://gitlab.example.com \
+  --token GROUP_REGISTRATION_TOKEN \
+  --executor docker \
+  --docker-image node:20
+
+<span class="hl-c"># 5. 驗證：在專案中建立 .gitlab-ci.yml，push 後觀察 pipeline</span></pre>
+</div>
+<div class="callout"><strong>設計決策：</strong>① 用 Docker volume 掛載三個目錄確保資料持久化；② Runner 用 Docker executor 讓每個 job 在獨立容器中執行，互不污染；③ 2222 port 映射避免與主機 SSH 衝突。</div>
+
+<h2>深入原理擴充</h2>
+<h3>GitLab 與 Git 的分工：伺服器端運作</h3>
+<p>Git 是命令列工具，GitLab 是 Rails 應用。GitLab 伺服器端透過 <strong>Gitolite</strong> 或自研的 <strong>Gitaly</strong>（gRPC 服務）管理 Git 倉庫的存取控制與操作。</p>
+<table>
+<tr><th>元件</th><th>職責</th><th>容易誤解的點</th></tr>
+<tr><td><strong>Gitaly</strong></td><td>Git 倉庫的 gRPC 存取層（clone、push、diff 等）</td><td>GitLab 不是直接呼叫 git 命令列，而是透過 Gitaly 服務化</td></tr>
+<tr><td><strong>Praefect</strong></td><td>Gitaly 代理，支援多副本與 failover</td><td>這是 GitLab 14+ 的高可用方案，自架時預設不開啟</td></tr>
+<tr><td><strong>GitLab Shell</strong></td><td>處理 SSH 存取（push/pull）</td><td>SSH 只是 Git 操作的通道，CI/CD 與 Web 操作不經 GitLab Shell</td></tr>
+</table>
+<div class="callout info"><strong>關鍵：</strong>你在 GitLab 網頁上看到的「儲存庫大小」包含 Git 物件、LFS、Wiki 等，但不含 CI artifacts 與 Container Registry——這兩者各有獨立儲存。</div>
+
+<h2>診斷式疑難排解表</h2>
+<table>
+<tr><th>症狀</th><th>可能原因</th><th>解決方案</th></tr>
+<tr><td>git clone / push 報 403 Forbidden</td><td>PAT 未勾選 write_repository scope 或已過期</td><td>到 Settings → Access Tokens 確認 scope 與到期日，重新產生 token</td></tr>
+<tr><td>自架 GitLab 網頁打不開</td><td>Docker port 映射錯誤，或主機防火牆擋住 80/443</td><td>執行 <code>docker ps</code> 確認 port，檢查 <code>ufw status</code> 或 iptables 規則</td></tr>
+<tr><td>SSH clone 報錯「Permission denied (publickey)」</td><td>SSH key 未上傳到 GitLab，或本地 ssh-agent 未載入</td><td>確認 <code>~/.ssh/id_rsa.pub</code> 已加到 GitLab → Preferences → SSH Keys，並執行 <code>ssh-add</code></td></tr>
+<tr><td>git pull 後衝突標記未消失</td><td>沒有實際執行 git add 與 git commit 解決衝突</td><td>編輯衝突檔案 → <code>git add .</code> → <code>git commit -m "resolve conflict"</code></td></tr>
+<tr><td>Internal visibility 專案看不見</td><td>使用 GitLab.com（非自架），Internal 級別不可用</td><td>GitLab.com 只有 Public / Private；Internal 是自架專屬功能</td></tr>
+</table>
+
+<h2>進階挑戰題</h2>
+<ol>
+<li><strong>多 Runner 策略設計：</strong>為一個有前端（Node）與後端（Python）的專案，設計 Runner tag 策略，讓前端 job 只跑在有 Node 環境的 Runner，後端 job 只跑在有 Python 的 Runner。畫出架構圖並說明 tag 的設定方式。</li>
+<li><strong>GitLab CE vs EE 功能差距分析：</strong>調查三個 GitLab EE 獨有的功能（如 Audit Events、Merge Train、Code Owners），說明它們在 50 人以上的團隊中如何提升合規性與效率。</li>
+</ol>
+
 </div>
 <footer>這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>

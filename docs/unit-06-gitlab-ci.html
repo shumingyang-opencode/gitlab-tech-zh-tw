@@ -220,6 +220,140 @@ CI 沒過就<strong>不能合併</strong>——品質的第一道自動防線（
     <a href="unit-05-issues-boards.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 5 · Issues 與 Boards</div></a>
     <a class="np-next" href="unit-07-gitlab-pages.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 7 · GitLab Pages</div></a>
 </div>
+
+<!-- ═══════ Round 1 Deepen ═══════ -->
+<h2>進階真實情境 Worked Example</h2>
+<h3>情境：多環境部署 + Review App + 手動生產部署</h3>
+<p>一個 Node.js 應用，需要：develop 分支自動部署到 staging 環境，每個 MR 自動產生一個 Review App（臨時預覽站），main 分支手動批准後才部署到 production，並在部署後自動執行 smoke test。</p>
+<div class="demo-block">
+  <div class="demo-label">.gitlab-ci.yml · FULL PIPELINE</div>
+  <pre><span class="hl-k">stages</span>:
+  - <span class="hl-s">build</span>
+  - <span class="hl-s">test</span>
+  - <span class="hl-s">review</span>
+  - <span class="hl-s">deploy</span>
+  - <span class="hl-s">smoke</span>
+
+<span class="hl-k">variables</span>:
+  <span class="hl-k">DOCKER_IMAGE</span>: <span class="hl-s">$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG</span>
+
+<span class="hl-k">build-job</span>:
+  <span class="hl-k">stage</span>: <span class="hl-s">build</span>
+  <span class="hl-k">image</span>: <span class="hl-s">node:20</span>
+  <span class="hl-k">script</span>:
+    - <span class="hl-s">npm ci</span>
+    - <span class="hl-s">npm run build</span>
+  <span class="hl-k">artifacts</span>:
+    <span class="hl-k">paths</span>: [<span class="hl-s">dist/</span>]
+  <span class="hl-k">cache</span>:
+    <span class="hl-k">key</span>: <span class="hl-s">$CI_COMMIT_REF_SLUG</span>
+    <span class="hl-k">paths</span>: [<span class="hl-s">node_modules/</span>]
+
+<span class="hl-k">test-job</span>:
+  <span class="hl-k">stage</span>: <span class="hl-s">test</span>
+  <span class="hl-k">image</span>: <span class="hl-s">node:20</span>
+  <span class="hl-k">script</span>:
+    - <span class="hl-s">npm ci</span>
+    - <span class="hl-s">npm test</span>
+    - <span class="hl-s">npm run lint</span>
+  <span class="hl-k">needs</span>: [<span class="hl-s">build-job</span>]
+
+<span class="hl-k">review-app</span>:
+  <span class="hl-k">stage</span>: <span class="hl-s">review</span>
+  <span class="hl-k">image</span>: <span class="hl-s">node:20</span>
+  <span class="hl-k">script</span>:
+    - <span class="hl-s">npm ci --production</span>
+    - <span class="hl-s">PORT=3000 node dist/server.js &</span>
+    - <span class="hl-s">echo "Review app at http://$CI_ENVIRONMENT_SLUG.$CI_PROJECT_NAME.example.com"</span>
+  <span class="hl-k">environment</span>:
+    <span class="hl-k">name</span>: <span class="hl-s">review/$CI_COMMIT_REF_SLUG</span>
+    <span class="hl-k">url</span>: <span class="hl-s">http://$CI_ENVIRONMENT_SLUG.$CI_PROJECT_NAME.example.com</span>
+    <span class="hl-k">on_stop</span>: <span class="hl-s">stop-review</span>
+  <span class="hl-k">rules</span>:
+    - <span class="hl-k">if</span>: <span class="hl-s">'$CI_MERGE_REQUEST_IID'</span>
+
+<span class="hl-k">stop-review</span>:
+  <span class="hl-k">stage</span>: <span class="hl-s">review</span>
+  <span class="hl-k">script</span>:
+    - <span class="hl-s">echo "Stopping review app for $CI_COMMIT_REF_SLUG"</span>
+  <span class="hl-k">environment</span>:
+    <span class="hl-k">name</span>: <span class="hl-s">review/$CI_COMMIT_REF_SLUG</span>
+    <span class="hl-k">action</span>: <span class="hl-s">stop</span>
+  <span class="hl-k">when</span>: <span class="hl-s">manual</span>
+
+<span class="hl-k">deploy-staging</span>:
+  <span class="hl-k">stage</span>: <span class="hl-s">deploy</span>
+  <span class="hl-k">script</span>:
+    - <span class="hl-s">echo "Deploying to staging..."</span>
+  <span class="hl-k">environment</span>:
+    <span class="hl-k">name</span>: <span class="hl-s">staging</span>
+  <span class="hl-k">rules</span>:
+    - <span class="hl-k">if</span>: <span class="hl-s">'$CI_COMMIT_BRANCH == "develop"'</span>
+
+<span class="hl-k">deploy-prod</span>:
+  <span class="hl-k">stage</span>: <span class="hl-s">deploy</span>
+  <span class="hl-k">script</span>:
+    - <span class="hl-s">echo "Deploying to production..."</span>
+  <span class="hl-k">environment</span>:
+    <span class="hl-k">name</span>: <span class="hl-s">production</span>
+  <span class="hl-k">rules</span>:
+    - <span class="hl-k">if</span>: <span class="hl-s">'$CI_COMMIT_BRANCH == "main"'</span>
+      <span class="hl-k">when</span>: <span class="hl-s">manual</span>
+
+<span class="hl-k">smoke-test</span>:
+  <span class="hl-k">stage</span>: <span class="hl-s">smoke</span>
+  <span class="hl-k">script</span>:
+    - <span class="hl-s">curl -sf https://app.example.com/health || exit 1</span>
+    - <span class="hl-s">echo "Smoke test passed"</span>
+  <span class="hl-k">rules</span>:
+    - <span class="hl-k">if</span>: <span class="hl-s">'$CI_COMMIT_BRANCH == "main"'</span>
+  <span class="hl-k">needs</span>: [<span class="hl-s">deploy-prod</span>]</pre>
+</div>
+<div class="callout"><strong>設計決策：</strong>① Review App 搭配 <code>environment.on_stop</code> 實現 MR 合併後自動清理；② deploy-prod 用 <code>when: manual</code> 做人工批准門檻；③ smoke-test 用 <code>needs</code> 確保只在 prod 部署完成後才跑；④ cache 用分支 slug 分開，避免不同分支的依賴互相污染。</div>
+
+<h2>深入原理擴充</h2>
+<h3>Runner Executor 差異與選擇</h3>
+<p>GitLab Runner 支援多種 executor，決定 job 在什麼環境中執行：</p>
+<table>
+<tr><th>Executor</th><th>運作方式</th><th>優點</th><th>缺點</th></tr>
+<tr><td><strong>shell</strong></td><td>直接在 Runner 主機上執行 shell 命令</td><td>最簡單、最快</td><td>job 間無隔離、污染主機環境</td></tr>
+<tr><td><strong>docker</strong></td><td>每個 job 啟動一個 Docker 容器</td><td>隔離性好、可指定 image</td><td>需要 Docker、稍慢（拉映像）</td></tr>
+<tr><td><strong>kubernetes</strong></td><td>每個 job 是一個 K8s Pod</td><td>自動擴縮、適合大規模</td><td>需 K8s 叢集、設定複雜</td></tr>
+<tr><td><strong>docker+machine</strong></td><td>動態建立 Docker 主機（auto-scaling）</td><td>雲端 auto-scale</td><td>需雲端 API、成本較高</td></tr>
+</table>
+<div class="callout info"><strong>選擇建議：</strong>小團隊用 <strong>docker</strong>（隔離＋彈性）；大型團隊或雲端環境用 <strong>kubernetes</strong>（自動擴縮）；CI 頻率低且主機乾淨時可用 <strong>shell</strong>（最省資源）。</div>
+
+<h3>DAG vs Stage 的執行模型</h3>
+<p>預設模式下，pipeline 依照 <strong>stage 順序</strong>執行——同一 stage 的 job 可平行，但下一 stage 必須等前一 stage 全部完成。DAG（Directed Acyclic Graph）用 <code>needs:</code> 打破此限制：</p>
+<div class="demo-block">
+  <div class="demo-label">DAG vs Stage 視覺化</div>
+  <pre>Stage 模式（嚴格順序）：
+build ──→ test ──→ deploy
+         （test 等 build 全部完成才開始）
+
+DAG 模式（needs 控制）：
+build-backend ──→ test-backend ──→ deploy
+build-frontend ──→ test-frontend ↗
+                  （test 只等自己的 build，不等別人）</pre>
+</div>
+<div class="callout warn"><strong>注意：</strong>DAG 會讓 pipeline 圖形變成有向無環圖，不再是直條的 stage 欄位——理解這個差異對 debug pipeline 很重要。</div>
+
+<h2>診斷式疑難排解表</h2>
+<table>
+<tr><th>症狀</th><th>可能原因</th><th>解決方案</th></tr>
+<tr><td>Pipeline 顯示「stuck」不動</td><td>沒有匹配的 Runner（tag 不符、Runner 離線）</td><td>Settings → CI/CD → Runners 檢查 Runner 狀態；確認 job 的 tag 與 Runner 的 tag 匹配</td></tr>
+<tr><td>CI 變數在 job 中為空</td><td>變數未設、scope 不符（如只設在專案但 job 在群組 Runner 跑）</td><td>Settings → CI/CD → Variables 確認變數存在；檢查 Protected / Masked 設定是否限制了存取</td></tr>
+<tr><td>cache 在不同 job 間不同步</td><td>cache key 不同、或不同 Runner 實例沒有共享儲存</td><td>確認 cache key 一致；若用 Docker executor 且多台 Runner，需設定共用 volume 或用 artifact 替代</td></tr>
+<tr><td>Artifact 太大導致 pipeline 超時</td><td>artifacts paths 包含 node_modules/ 或 .git/ 等大目錄</td><td>縮小 artifacts 路徑；排除不必要目錄（用 <code>exclude:</code>）；設 expire_in 限制保留時間</td></tr>
+<tr><td>rules: if 條件永遠不匹配</td><td>變數名拼寫錯誤，或使用了不支援的 CI 變數</td><td>在 job script 中先 <code>echo $VARIABLE_NAME</code> 確認變數值；參閱 GitLab CI/CD pre-defined variables 文件</td></tr>
+</table>
+
+<h2>進階挑戰題</h2>
+<ol>
+<li><strong>Pipeline 效能最佳化：</strong>一個有 20 個 job 的大型 pipeline，用 DAG（needs）重構 stage 順序，畫出「原本 stage 模式」與「DAG 模式」的執行時間對比圖，說明哪些 job 可以提早開始。</li>
+<li><strong>CI 安全最佳實踐：</strong>列出 5 個防止 CI/CD 中密鑰洩漏的具體措施（含 Variable 設定、push rule、secret detection），並說明每個措施防堵的是什麼攻擊場景。</li>
+</ol>
+
 </div>
 <footer>這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>

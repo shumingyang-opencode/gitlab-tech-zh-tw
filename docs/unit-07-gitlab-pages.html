@@ -158,6 +158,79 @@ Vite 需設 <code>base: '/project-name/'</code>；Astro 設 <code>site</code> �
     <a href="unit-06-gitlab-ci.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 6 · GitLab CI</div></a>
     <a class="np-next" href="unit-08-gitlab-vs-github.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 8 · GitLab vs GitHub</div></a>
 </div>
+
+<!-- ═══════ Round 1 Deepen ═══════ -->
+<h2>進階真實情境 Worked Example</h2>
+<h3>情境：Astro 框架 + 多環境部署 + 自訂網域</h3>
+<p>一個技術文件站用 Astro 製作，需要：PR 自動產生 Review App 供預覽、main 分支部署到生產環境、自訂網域 docs.example.com 並自動 SSL。</p>
+<div class="demo-block">
+  <div class="demo-label">.gitlab-ci.yml · FULL DEPLOY</div>
+  <pre><span class="hl-k">image</span>: <span class="hl-s">node:20</span>
+
+<span class="hl-k">stages</span>:
+  - <span class="hl-s">build</span>
+  - <span class="hl-s">deploy</span>
+
+<span class="hl-k">build</span>:
+  <span class="hl-k">stage</span>: <span class="hl-s">build</span>
+  <span class="hl-k">script</span>:
+    - <span class="hl-s">npm ci</span>
+    - <span class="hl-s">npm run build</span>
+  <span class="hl-k">artifacts</span>:
+    <span class="hl-k">paths</span>: [<span class="hl-s">dist/</span>]
+
+<span class="hl-k">pages</span>:
+  <span class="hl-k">stage</span>: <span class="hl-s">deploy</span>
+  <span class="hl-k">script</span>:
+    - <span class="hl-s">cp -r dist/* public/</span>
+  <span class="hl-k">artifacts</span>:
+    <span class="hl-k">paths</span>:
+      - <span class="hl-s">public</span>
+  <span class="hl-k">needs</span>: [<span class="hl-s">build</span>]
+  <span class="hl-k">rules</span>:
+    - <span class="hl-k">if</span>: <span class="hl-s">'$CI_COMMIT_BRANCH == "main"'</span>
+
+<span class="hl-k">review</span>:
+  <span class="hl-k">stage</span>: <span class="hl-s">deploy</span>
+  <span class="hl-k">script</span>:
+    - <span class="hl-s">cp -r dist/* public/</span>
+  <span class="hl-k">artifacts</span>:
+    <span class="hl-k">paths</span>:
+      - <span class="hl-s">public</span>
+  <span class="hl-k">needs</span>: [<span class="hl-s">build</span>]
+  <span class="hl-k">rules</span>:
+    - <span class="hl-k">if</span>: <span class="hl-s">'$CI_MERGE_REQUEST_IID'</span></pre>
+</div>
+<div class="callout"><strong>設計決策：</strong>① build stage 與 deploy stage 分離——build 失敗不會觸發 Pages 發布；② pages job 只在 main 分支跑，review job 只在 MR 跑，兩者互不干擾；③ Astro 的 <code>astro.config.mjs</code> 需設 <code>site: 'https://docs.example.com'</code> 與 <code>base: '/'</code>（自訂網域時 base 為根）。</div>
+
+<h2>深入原理擴充</h2>
+<h3>GitLab Pages 的發布機制</h3>
+<p>GitLab Pages 不是「把檔案丟到 Web 伺服器」——它有獨立的發布管線：</p>
+<table>
+<tr><th>步驟</th><th>運作</th><th>容易忽略的細節</th></tr>
+<tr><td>① artifact 上傳</td><td>CI 成功後，GitLab 把 <code>public</code> artifact 備份到 Pages 儲存</td><td>artifact 必須包含 <code>public</code> 目錄，且 job 名必須是 <code>pages</code></td></tr>
+<tr><td>② 部署觸發</td><td>GitLab Pages daemon 讀取 artifact，更新網站內容</td><td>發布有延遲（通常 1-5 分鐘），不是 push 後立即上線</td></tr>
+<tr><td>③ CDN 快取</td><td>GitLab.com 的 Pages 有 CDN 快取層</td><td>改 CSS/JS 後瀏覽器可能讀到舊版——需要清除快取或加 hash 後綴</td></tr>
+<tr><td>④ 存取控制</td><td>可設定「僅專案成員可見」</td><td>自架 GitLab 的 Pages 可走內網，GitLab.com 的 Pages 預設公開</td></tr>
+</table>
+<div class="callout warn"><strong>常見誤解：</strong>GitHub Pages 可以「從分支直接發布」（不需要 CI），GitLab Pages <strong>一定</strong>要透過 CI 的 pages job。這是兩者最大的架構差異。</div>
+
+<h2>診斷式疑難排解表</h2>
+<table>
+<tr><th>症狀</th><th>可能原因</th><th>解決方案</th></tr>
+<tr><td>Pages 部署後顯示 404</td><td>job 名不是 <code>pages</code>，或 artifacts 路徑不含 <code>public</code></td><td>確認 .gitlab-ci.yml 中有 <code>pages:</code> job，且 artifacts paths 包含 <code>public</code> 目錄</td></tr>
+<tr><td>CSS / JS 路徑 404（資源讀不到）</td><td>Astro/Vite 的 base 路徑未設定，或設定為根目錄 <code>/</code> 但專案不是根域名</td><td>Astro：<code>base: '/project-name/'</code>；Vite：<code>base: '/project-name/'</code>；自訂網域時 <code>base: '/'</code></td></tr>
+<tr><td>自訂網域 SSL 一直不生效</td><td>DNS CNAME 尚未生效，或 GitLab 的 Auto SSL 尚未觸發</td><td>用 <code>dig docs.example.com</code> 確認 CNAME 指向正確；等待 15-30 分鐘讓 Let's Encrypt 驗證</td></tr>
+<tr><td>Pipeline 綠但 Pages 沒更新</td><td>rules 條件限制了 pages job 只在特定分支跑，但你推到了其他分支</td><td>確認 pages job 的 rules 是否包含你的分支；或暫時移除 rules 測試</td></tr>
+<tr><td>Pages 站被搜尋引擎索引到不想公開的內容</td><td>專案設為 Public，且無 robots.txt 控制</td><td>在 public/ 加 robots.txt；或將專案改為 Private / Internal</td></tr>
+</table>
+
+<h2>進階挑戰題</h2>
+<ol>
+<li><strong>多語言文件站部署：</strong>設計一個 Astro 多語言文件站的 Pages 部署方案，包含 <code>/zh/</code> 與 <code>/en/</code> 兩個語言版本，說明 Astro 的 i18n 設定與 Pages 的 URL 結構如何配合。</li>
+<li><strong>Pages vs Cloudflare Pages vs Vercel 比較：</strong>從部署流程、自訂網域、SSL、存取控制、免費額度五個面向，比較 GitLab Pages 與兩大前端部署平台的差異，並說明何時選 GitLab Pages 更合適。</li>
+</ol>
+
 </div>
 <footer>這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>

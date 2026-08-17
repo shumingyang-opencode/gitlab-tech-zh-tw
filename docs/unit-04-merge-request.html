@@ -164,6 +164,59 @@ CI 沒過或討論沒解決，<code>Merge</code> 按鈕直接不亮。</div>
     <a href="unit-03-branches-mr.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 3 · 分支與 Merge Request</div></a>
     <a class="np-next" href="unit-05-issues-boards.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 5 · Issues 與 Boards</div></a>
 </div>
+
+<!-- ═══════ Round 1 Deepen ═══════ -->
+<h2>進階真實情境 Worked Example</h2>
+<h3>情境：多階段審查流程——金流專案的高門檻 MR</h3>
+<p>一個處理付款的專案，MR 必須通過「自動 CI 檢查 + 2 人批准 + 路徑審查」三重門檻，且金流相關檔案（<code>src/payments/</code>）需要 CTO 親自批准。</p>
+<div class="demo-block">
+  <div class="demo-label">Approval Rules 設定 · CONFIG</div>
+  <pre><span class="hl-c"># Settings → Merge requests → Approval rules</span>
+Rule 1:  需要 2 人批准（全專案）
+Rule 2:  需要 1 人批准，限檔案 src/payments/**
+         指定 approver: CTO（user_id: 1）
+
+<span class="hl-c"># Settings → General → Push rules</span>
+✓ Reject unsigned commits
+✓ Reject secret files (.env, *.pem)
+
+<span class="hl-c"># Protected branches → main</span>
+✓ Allowed to merge: Maintainers
+✓ Allowed to push: No one
+✓ Pipelines must succeed
+✓ All discussions must resolve
+✓ 需要 2 個批准</pre>
+</div>
+<div class="callout"><strong>流程：</strong>① 開發者開 MR → ② CI 自動跑 lint + 測試 + SAST 掃描 → ③ 兩位 Maintainer 在 Overview 頁批准 → ④ 若改到 src/payments/，系統自動要求 CTO 另外批准 → ⑤ 所有討論 resolve → ⑥ Merge 按鈕亮起。</div>
+
+<h2>深入原理擴充</h2>
+<h3>GitLab SAST 與安全掃描的運作原理</h3>
+<p>GitLab 內建 <strong>Secure</strong> 功能，在 CI pipeline 中自動執行靜態應用程式安全測試（SAST）：</p>
+<table>
+<tr><th>掃描類型</th><th>原理</th><th>產出</th></tr>
+<tr><td><strong>SAST</strong></td><td>分析原始碼的語法樹（AST），比對已知漏洞模式（如 SQL injection pattern）</td><td>MR 頁顯示漏洞清單（severity + file + line）</td></tr>
+<tr><td><strong>Secret Detection</strong></td><td>用正則比對 API key、token、密碼等模式</td><td>發現硬編碼密鑰會阻止合併</td></tr>
+<tr><td><strong>Dependency Scanning</strong></td><td>掃描 package.json / requirements.txt 等，比對 CVE 資料庫</td><td>列出有已知漏洞的套件版本</td></tr>
+<tr><td><strong>Container Scanning</strong></td><td>掃描 Docker 映像層的 OS 套件漏洞</td><td>CVE 列表 + 修復建議版本</td></tr>
+</table>
+<div class="callout info"><strong>運作細節：</strong>SAST 透過 GitLab 的 Analyzers（獨立 Docker 映像）執行，例如 Semgrep 或 Bandit。分析器跑完後產出 JSON 報告，GitLab 統一解讀並呈現在 MR 的 Security 頁籤。</div>
+
+<h2>診斷式疑難排解表</h2>
+<table>
+<tr><th>症狀</th><th>可能原因</th><th>解決方案</th></tr>
+<tr><td>Merge 按鈕灰色、不亮</td><td>CI pipeline 失敗、或未達批准門檻、或有未解決討論</td><td>逐一檢查：Pipelines 頁是否綠燈、Approvals 是否夠數、Overview 頁是否有 unresolved thread</td></tr>
+<tr><td>Suggestion 套用後程式壞了</td><td>建議只改了一行，但上下文需要其他變更</td><td>套用後務必在本機 <code>npm test</code> 或 <code>make test</code> 驗證，不要盲目套用</td></tr>
+<tr><td>批准數「卡住」不會減少</td><td>Settings 中沒勾「Remove all approvals when commits are added」</td><td>到 Settings → Merge requests → 勾選該選項，確保新 commit 重置批准狀態</td></tr>
+<tr><td>MR 頁看不到 Pipelines 分頁</td><td>此專案沒有 .gitlab-ci.yml，或 pipeline 未觸發</td><td>確認根目錄有 .gitlab-ci.yml 且 push 觸發了 pipeline</td></tr>
+<tr><td>Squash 合併後 commit 訊息不符合規範</td><td>預設 squash commit message 只帶 MR 標題</td><td>在 Settings → Merge requests 設定 squash commit message 模板，例如帶 <code>$TITLE</code> + <code>$MR_URL</code></td></tr>
+</table>
+
+<h2>進階挑戰題</h2>
+<ol>
+<li><strong>自訂 MR 模板：</strong>在專案中建立兩個 MR 描述模板（bugfix template 與 feature template），說明如何在 <code>.gitlab/merge_request_templates/</code> 目錄下建立，並在建立 MR 時從下拉選單選擇。</li>
+<li><strong>Merge Train 模擬：</strong>說明 Merge Train 的運作流程：假設同時有 5 顆 MR 排隊合併到 main，畫出「依序合併 + 互相測試」的序列圖，並比較它與「每顆 MR 各自等 pipeline」在時間效率上的差異。</li>
+</ol>
+
 </div>
 <footer>這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>

@@ -157,6 +157,64 @@ git push -u origin fix/typo
     <a href="unit-02-first-project.html"><div class="np-label">← 上一篇</div><div class="np-name">單元 2 · 第一個專案</div></a>
     <a class="np-next" href="unit-04-merge-request.html"><div class="np-label">下一篇 →</div><div class="np-name">單元 4 · Merge Request 深入</div></a>
 </div>
+
+<!-- ═══════ Round 1 Deepen ═══════ -->
+<h2>進階真實情境 Worked Example</h2>
+<h3>情境：GitFlow 工作流——多分支長期專案</h3>
+<p>一個 SaaS 產品同時維護三個版本（v1.x、v2.x、v3.x），需要 develop、release、hotfix 等分支策略。</p>
+<div class="demo-block">
+  <div class="demo-label">GitFlow 分支圖 · FLOW</div>
+  <pre>main ─────●────●────●─────────●───●───────────
+          │    │    │         │   │
+release/1  │    │    ●────●───┘   │           ← 釋出分支
+           │    │    ↑    ↑       │
+develop ───●────●────●────●────●──●───●───────
+              ↑         ↑       ↑    ↑
+feature/a ────●────●────┘       │    │
+feature/b ──────────────────────●────┘
+hotfix/1 ─────────────────────────────●──────  ← 緊急修復
+
+<span class="hl-c"># 1. 從 develop 開 feature</span>
+git checkout -b feature/search develop
+<span class="hl-c"># 開發完成 → MR target: develop</span>
+
+<span class="hl-c"># 2. 準備發版：從 develop 開 release</span>
+git checkout -b release/2.1 develop
+<span class="hl-c"># 只做 bugfix → MR target: main + develop</span>
+
+<span class="hl-c"># 3. 緊急修復：從 main 開 hotfix</span>
+git checkout -b hotfix/crash-fix main
+<span class="hl-c"># 修完 → MR target: main + develop</span></pre>
+</div>
+<div class="callout"><strong>關鍵：</strong>hotfix 與 release 分支都需要「雙向合併」——合併到 main 後也要同步回 develop，否則下次 develop 的版本會缺少修復。</div>
+
+<h2>深入原理擴充</h2>
+<h3>Git 合併策略的底層邏輯</h3>
+<p>Git 支援多種合併策略，影響衝突解決方式與歷史圖形：</p>
+<table>
+<tr><th>策略</th><th>指令</th><th>特點</th><th>何時使用</th></tr>
+<tr><td><strong>merge（預設）</strong></td><td><code>git merge branch</code></td><td>產生合併 commit（兩條線匯合）</td><td>保留完整開發過程</td></tr>
+<tr><td><strong>squash merge</strong></td><td><code>git merge --squash branch</code></td><td>把分支所有 commit 壓成一個</td><td>歷史要乾淨</td></tr>
+<tr><td><strong>rebase</strong></td><td><code>git rebase main</code></td><td>把分支 commit「重放」到 main 最新位置，無合併節點</td><td>直線歷史</td></tr>
+</table>
+<div class="callout warn"><strong>黃金準則：</strong><strong>永遠不要 rebase 已經 push 到遠端的分支</strong>——rebase 會改寫 commit hash，其他人的本地副本會產生分歧，導致混亂。只 rebase 你自己的、尚未分享的分支。</div>
+
+<h2>診斷式疑難排解表</h2>
+<table>
+<tr><th>症狀</th><th>可能原因</th><th>解決方案</th></tr>
+<tr><td>git merge 報「CONFLICT (content)」但找不到衝突檔案</td><td>衝突在子模組（submodule）或二進位檔中</td><td>執行 <code>git diff --name-only --diff-filter=U</code> 列出所有衝突檔案</td></tr>
+<tr><td>rebase 後 git push 被拒絕</td><td>已 rebase 了已 push 的分支（歷史被改寫）</td><td>確認沒其他人在此分支工作；若已推送需 <code>git push --force-with-lease</code>，並通知團隊</td></tr>
+<tr><td>MR 合併後衝突又出現</td><td>target 分支在 MR 開發期間又有新 commit，未 rebase/merge 最新 main</td><td>在合併前先 <code>git checkout feature && git rebase main</code>，解決衝突後再 push</td></tr>
+<tr><td>git log 圖形很亂、看不清分支關係</td><td>大量 merge commit 造成交叉線</td><td>執行 <code>git log --oneline --graph --all</code>；或改用 squash merge 減少合併節點</td></tr>
+<tr><td>分支名稱含斜線（feature/login）本地切換失敗</td><td>shell 把 / 當成路徑分隔符</td><td>引用時加引號：<code>git checkout "feature/login"</code> 或用 <code>git switch feature/login</code></td></tr>
+</table>
+
+<h2>進階挑戰題</h2>
+<ol>
+<li><strong>衝突解決演練：</strong>建立一個模擬場景——main 上的 README.md 第 5 行改了，你的分支上同一行也改了。練習用 <code>git mergetool</code>（非編輯器手動解）解決衝突，比較兩種方式的效率。</li>
+<li><strong>分支策略選型：</strong>為一個「每兩週發版、同時修 hotfix」的團隊設計分支策略，畫出 Git 圖形並說明 release 與 hotfix 的合併路徑。</li>
+</ol>
+
 </div>
 <footer>這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>
