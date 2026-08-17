@@ -215,6 +215,101 @@ git checkout -b hotfix/crash-fix main
 <li><strong>分支策略選型：</strong>為一個「每兩週發版、同時修 hotfix」的團隊設計分支策略，畫出 Git 圖形並說明 release 與 hotfix 的合併路徑。</li>
 </ol>
 
+<!-- ═══════ Round 2 Deepen ═══════ -->
+<h2>專案級端到端 Worked Example</h2>
+<h3>情境：功能交付專案（feature-delivery）——從 Issue 到上線</h3>
+<p>一個團隊要建立「可重複的交付節奏」：用分支策略、MR 範本與發布手冊，把「一顆功能怎麼從 issue 走到上線」變成文件化、可複製的流程。</p>
+<div class="demo-block">
+  <div class="demo-label">專案檔案樹 · TREE</div>
+  <pre>feature-delivery/
+├── README.md                     <span class="hl-c"># 專案總覽與流程入口</span>
+├── .gitlab/
+│   ├── merge_request_templates/
+│   │   └── feature.md            <span class="hl-c"># MR 描述範本（單元 3/4）</span>
+│   └── issue_templates/
+│       ├── bug.md                <span class="hl-c"># Bug 範本</span>
+│       └── feature.md            <span class="hl-c"># 功能範本（單元 5）</span>
+├── docs/
+│   ├── branching-strategy.md     <span class="hl-c"># 分支策略（含圖）</span>
+│   └── release-playbook.md       <span class="hl-c"># 發布手冊</span>
+└── src/
+    └── app.py                    <span class="hl-c"># 範例程式</span></pre>
+</div>
+<div class="demo-block">
+  <div class="demo-label">關鍵檔案 · KEY FILES</div>
+  <pre><span class="hl-c"># .gitlab/merge_request_templates/feature.md</span>
+## 動機
+為什麼做這個功能？（關聯 issue：Closes #）
+
+## 改動範圍
+- [ ] 改了哪些檔案/模組
+
+## 測試
+- [ ] 單元測試
+- [ ] 手動驗證步驟
+
+## 風險
+- [ ] 相容性 / 效能 / 安全影響
+
+<span class="hl-c"># docs/branching-strategy.md（摘錄）</span>
+main        ← 永遠可發布，禁止直接 push（保護分支）
+feature/*   ← 從 main 開，合併回 main（squash）
+hotfix/*    ← 從 main 開，合併回 main 後也要併回 feature 線</pre>
+</div>
+<div class="demo-block">
+  <div class="demo-label">驗證命令與輸出 · VERIFY</div>
+  <pre>$ git log --oneline --graph main | head -8
+* 9f3a21e (HEAD -&gt; main) feat: 加入搜尋 (squash)   <span class="hl-c"># 乾淨的 squash 歷史</span>
+* 41c0f12 fix: 修正登入空白
+* 7b2e9d0 chore: 初始專案
+
+$ git branch -r --merged main      <span class="hl-c"># 找出可刪的已合併分支</span>
+  origin/feature/12-search
+  origin/feature/10-login-fix</pre>
+</div>
+<div class="callout"><strong>專案級收斂：</strong>分支操作（單元 3）在這裡升級成「策略 + 範本 + 手冊」三件套——個人技術變成團隊紀律。git log 乾淨，release 可預測。</div>
+
+<h2>效能 / 品質 / 安全深度</h2>
+<h3>效能：分支與 CI 的節奏</h3>
+<ul>
+<li>每顆 MR 只觸發自己相關的 job（<code>rules: changes:</code>），文件專案不跑後端測試。</li>
+<li>定期刪除已合併分支（GitLab 可勾選自動刪除），避免 branch 列表塞爆、也省遠端 ref 儲存。</li>
+<li>Trunk-based 節奏（小 MR、頻繁合併）比長壽命分支減少衝突與合併成本。</li>
+</ul>
+<h3>品質：衝突少、歷史乾淨</h3>
+<ul>
+<li>小 commit、頻繁 pull、一次只做一件事——衝突大多不是技術問題，是節奏問題。</li>
+<li>統一合併方式（squash）＋MR 範本，讓每顆 MR 有動機、有範圍、有測試。</li>
+<li><code>git log --oneline</code> 一行懂一行：commit 訊息寫「做了什麼」。</li>
+</ul>
+<h3>安全：保護你的主線</h3>
+<ul>
+<li><strong>保護分支</strong>：main 禁止直接 push、禁止 force push、只有 Maintainer 能合併。</li>
+<li><strong>signed commits</strong>：可設 push rule 拒收未簽署 commit，確保來源可信。</li>
+<li>hotfix 走 MR（不是直接 push main），就算緊急也要留痕。</li>
+</ul>
+
+<h2>站際比較對照表</h2>
+<table>
+<tr><th>面向</th><th>gitlab</th><th>github</th><th>markdown</th><th>yaml</th><th>json</th></tr>
+<tr><td>合併請求</td><td>Merge Request</td><td>Pull Request</td><td>文件版本文責</td><td>—</td><td>—</td></tr>
+<tr><td>分支模型</td><td>GitFlow / Trunk 皆可</td><td>同左（偏好 PR 流程）</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>衝突表示</td><td>網頁 Resolve conflicts</td><td>網頁衝突解工具</td><td>diff 肉眼比對</td><td>縮排衝突難解</td><td>合併易覆蓋</td></tr>
+<tr><td>自動關閉</td><td>Closes #id / Fixes #id</td><td>Closes / Fixes</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>保護分支</td><td>免費且細粒度</td><td>進階需付費</td><td>—</td><td>—</td><td>—</td></tr>
+</table>
+
+<h2>互動式檢核清單</h2>
+<div class="demo-block">
+  <div class="demo-label">進階驗收清單 · CHECKLIST</div>
+  <pre>- [ ] 分支策略已文件化並全員遵守
+- [ ] 每顆 MR 都用範本＋Closes #issue
+- [ ] main 已設保護分支（禁直接 push / 禁 force push）
+- [ ] 已示範一次手動解衝突並記錄步驟
+- [ ] 已刪除所有已合併的殘留分支
+- [ ] 已驗證 squash 合併後 git log 歷史乾淨</pre>
+</div>
+
 </div>
 <footer>這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>

@@ -231,6 +231,116 @@ Vite 需設 <code>base: '/project-name/'</code>；Astro 設 <code>site</code> �
 <li><strong>Pages vs Cloudflare Pages vs Vercel 比較：</strong>從部署流程、自訂網域、SSL、存取控制、免費額度五個面向，比較 GitLab Pages 與兩大前端部署平台的差異，並說明何時選 GitLab Pages 更合適。</li>
 </ol>
 
+<!-- ═══════ Round 2 Deepen ═══════ -->
+<h2>專案級端到端 Worked Example</h2>
+<h3>情境：公司文件中心 Pages 專案（company-docs）</h3>
+<p>為全公司建立「對內文件中心」：Astro 建置、Review App 預覽、main 才上線、自訂網域 docs.example.com、自動 SSL、並開啟存取控制（登入才可見）。</p>
+<div class="demo-block">
+  <div class="demo-label">專案檔案樹 · TREE</div>
+  <pre>company-docs/
+├── README.md
+├── package.json
+├── astro.config.mjs              <span class="hl-c"># site / base 設定</span>
+├── .gitlab-ci.yml                <span class="hl-c"># build → pages + review app</span>
+├── src/
+│   ├── pages/
+│   │   ├── index.astro
+│   │   └── guides/
+│   │       └── onboarding.astro
+│   └── styles/
+│       └── global.css
+└── public/
+    ├── robots.txt
+    └── favicon.svg</pre>
+</div>
+<div class="demo-block">
+  <div class="demo-label">關鍵檔案 · KEY FILES</div>
+  <pre><span class="hl-c"># astro.config.mjs（自訂網域時 base 為根）</span>
+export default defineConfig({
+  site: 'https://docs.example.com',
+  base: '/',
+});
+
+<span class="hl-c"># .gitlab-ci.yml（cache + 分離 build/deploy + review）</span>
+stages: [build, deploy]
+cache:
+  key: $CI_COMMIT_REF_SLUG
+  paths: [node_modules/]
+
+build:
+  stage: build
+  script: [npm ci, npm run build]
+  artifacts: { paths: [dist/], expire_in: 1 week }
+
+pages:                        <span class="hl-c"># 只有 main 才發佈</span>
+  stage: deploy
+  script: [cp -r dist/* public/]
+  artifacts: { paths: [public] }
+  rules: [{ if: '$CI_COMMIT_BRANCH == "main"' }]
+
+review:                       <span class="hl-c"># 只有 MR 才預覽</span>
+  stage: deploy
+  script: [cp -r dist/* public/]
+  artifacts: { paths: [public] }
+  rules: [{ if: '$CI_MERGE_REQUEST_IID' }]</pre>
+</div>
+<div class="demo-block">
+  <div class="demo-label">驗證命令與輸出 · VERIFY</div>
+  <pre>$ dig docs.example.com +short            <span class="hl-c"># DNS 指向 Pages</span>
+user.gitlab.io.
+
+$ curl -sI https://docs.example.com/ | head -1
+HTTP/1.1 200 OK
+
+$ curl -s https://docs.example.com/healthz.txt
+ok
+
+$ curl -sI https://docs.example.com/ | grep -i strict-transport
+strict-transport-security: max-age=31536000  <span class="hl-c"># HTTPS 強制</span></pre>
+</div>
+<div class="callout"><strong>專案級收斂：</strong>單元 7 的「pages job / URL / 自訂網域 / 存取控制」在這裡變成一座真正的內部站點——Review App 讓 MR 先預覽、main 才正式發布、登入才可見，安全與流程一次到位。</div>
+
+<h2>效能 / 品質 / 安全深度</h2>
+<h3>效能：快取與建置成本</h3>
+<ul>
+<li><strong>node_modules cache</strong>：<code>npm ci</code> 從 3 分鐘降到 20 秒，是 Pages 站最大的建置開支。</li>
+<li>資產處理：CSS/JS 加 content hash（Astro/Vite 內建），改版後瀏覽器不會讀到舊快取。</li>
+<li>Pages 站有 CDN 快取層；發布後偶有延遲（1–5 分鐘），不需強刷。</li>
+</ul>
+<h3>品質：把「文件站」當產品經營</h3>
+<ul>
+<li>SEO 與分享：每個頁面 title / description / canonical；robots.txt 控制搜尋引擎。</li>
+<li>可讀性：Lighthouse 檢查 performance/accessibility 進 CI，低於門檻就紅。</li>
+<li>失效連結檢查：CI 中跑 link checker，文件不因改版出現死連結。</li>
+</ul>
+<h3>安全：內部文件不外流</h3>
+<ul>
+<li><strong>存取控制</strong>：自架 Pages 可設「僅登入/成員可見」——內部 SOP 不公開。</li>
+<li>HTTPS 全程（自動 Let's Encrypt + HSTS）；禁 HTTP 明文。</li>
+<li>敏感文件（合約、個資）根本不放 Pages——Pages 是公開/半公開場所，機密走受限系統。</li>
+</ul>
+
+<h2>站際比較對照表</h2>
+<table>
+<tr><th>面向</th><th>gitlab</th><th>github</th><th>markdown</th><th>yaml</th><th>json</th></tr>
+<tr><td>靜態站部署</td><td>GitLab Pages（一定走 CI）</td><td>GitHub Pages（可一鍵 from branch）</td><td>可轉 HTML（docs 工具鏈）</td><td>—</td><td>—</td></tr>
+<tr><td>存取控制</td><td>可設登入才可見</td><td>private repo 的 Pages 有限制</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>自訂網域</td><td>支援 + 自動 SSL</td><td>支援 + 自動 SSL</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>建置流程</td><td>一定走 CI（pages job）</td><td>可 branch 直接發布</td><td>本機/CI 建置</td><td>—</td><td>—</td></tr>
+<tr><td>內容來源</td><td>CI artifact（public/）</td><td>分支或 GitHub Actions</td><td>.md 原始碼</td><td>—</td><td>資料驅動頁面</td></tr>
+</table>
+
+<h2>互動式檢核清單</h2>
+<div class="demo-block">
+  <div class="demo-label">進階驗收清單 · CHECKLIST</div>
+  <pre>- [ ] 專案頁 / 使用者頁 / 群組頁三種 URL 至少實作過一種
+- [ ] 自訂網域 CNAME + 自動 SSL 已生效（curl 驗證）
+- [ ] 內部文件站已啟用存取控制（未登入者看不到）
+- [ ] base 路徑正確，頁面上無任何資源 404
+- [ ] 已加 robots.txt 與各頁 SEO meta
+- [ ] Lighthouse performance ≥ 90 且檢查已進 CI</pre>
+</div>
+
 </div>
 <footer>這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>

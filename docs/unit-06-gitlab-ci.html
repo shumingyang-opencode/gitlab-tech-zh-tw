@@ -354,6 +354,112 @@ build-frontend ──→ test-frontend ↗
 <li><strong>CI 安全最佳實踐：</strong>列出 5 個防止 CI/CD 中密鑰洩漏的具體措施（含 Variable 設定、push rule、secret detection），並說明每個措施防堵的是什麼攻擊場景。</li>
 </ol>
 
+<!-- ═══════ Round 2 Deepen ═══════ -->
+<h2>專案級端到端 Worked Example</h2>
+<h3>情境：微服務多環境交付專案（microservices）</h3>
+<p>一個 monorepo 內含 Go API 與 Node Web 兩個服務，需要：多環境（staging/prod）部署、品質門檻、安全掃描。把單元 6 的 CI 知識放大到「整站規模」——用 include 拆分、cache 加速、parallel 矩陣、手動 prod 閘門。</p>
+<div class="demo-block">
+  <div class="demo-label">專案檔案樹 · TREE</div>
+  <pre>microservices/
+├── README.md
+├── .gitlab-ci.yml                <span class="hl-c"># 主 pipeline（include 下面三份）</span>
+├── .gitlab/
+│   └── ci-templates/
+│       ├── base.yml              <span class="hl-c"># 共用 default / image / cache</span>
+│       ├── build.yml             <span class="hl-c"># build jobs（+ parallel 矩陣）</span>
+│       ├── test.yml              <span class="hl-c"># test + 品質門檻</span>
+│       └── deploy.yml            <span class="hl-c"># staging / prod（manual）</span>
+├── services/
+│   ├── api/                      <span class="hl-c"># Go 服務</span>
+│   │   ├── Dockerfile
+│   │   └── go.mod
+│   └── web/                      <span class="hl-c"># Node 服務</span>
+│       ├── Dockerfile
+│       └── package.json
+├── scripts/
+│   ├── healthcheck.sh            <span class="hl-c"># 部署後健康檢查</span>
+│   └── rollback.sh               <span class="hl-c"># 回滾腳本</span>
+└── compose/
+    └── docker-compose.prod.yml</pre>
+</div>
+<div class="demo-block">
+  <div class="demo-label">關鍵檔案 · KEY FILES</div>
+  <pre><span class="hl-c"># .gitlab-ci.yml（主檔）</span>
+stages: [build, test, security, deploy]
+include:
+  - local: '.gitlab/ci-templates/base.yml'
+  - local: '.gitlab/ci-templates/build.yml'
+  - local: '.gitlab/ci-templates/test.yml'
+  - local: '.gitlab/ci-templates/deploy.yml'
+
+<span class="hl-c"># .gitlab/ci-templates/build.yml（parallel 矩陣）</span>
+build:
+  parallel:
+    matrix:
+      - SERVICE: [api, web]        <span class="hl-c"># 兩服務同時建</span>
+  script: ./scripts/build.sh $SERVICE
+  artifacts:
+    paths: [out/$SERVICE/]
+    expire_in: 1 week</pre>
+</div>
+<div class="demo-block">
+  <div class="demo-label">驗證命令與輸出 · VERIFY</div>
+  <pre>$ glab ci status
+# Pipeline #214 on main (sha abc1234) · running
+build:api   ✓ 12s
+build:web   ✓ 15s      <span class="hl-c"># parallel：兩者同時跑</span>
+test:api    ✓ 8s
+test:web    ✓ 11s
+sast        ✓ 20s
+deploy:staging ✓ 6s
+deploy:prod   ● manual  <span class="hl-c"># 等人按鈕</span>
+
+$ ./scripts/healthcheck.sh https://prod.example.com
+HTTP 200 · version abc1234 · latency 42ms ✓</pre>
+</div>
+<div class="callout"><strong>專案級收斂：</strong>單元 6 的每個關鍵字（stages/jobs/runners/artifacts/cache/rules）都在這個 monorepo 的 pipeline 中出現——你寫的不是範例，而是能承接真實流量的交付系統。</div>
+
+<h2>效能 / 品質 / 安全深度</h2>
+<h3>效能：把 pipeline 從 40 分鐘壓到 10 分鐘</h3>
+<ul>
+<li><strong>cache</strong>：<code>node_modules/</code>、Go module cache、apt 套件——用分支 slug 當 key，命中率是最大變數。</li>
+<li><strong>parallel</strong>：跨服務、跨測試套件矩陣並行。</li>
+<li><strong>DAG（needs）</strong>：test 不等 build 全族，只等自己那顆 build。</li>
+<li><strong>Runner 資源</strong>：自架 Runner 用 Kubernetes executor 自動擴縮，尖峰不排隊。</li>
+</ul>
+<h3>品質：quality gates 自動擋</h3>
+<ul>
+<li>測試涵蓋率門檻：<code>coverage</code> 設 <code>status: 'coverage &gt;= 80%'</code>——不達標即紅。</li>
+<li>lint + 型別檢查 + 單元測試 + 部署後 smoke test，任一失敗 pipeline 紅、MR 擋合併。</li>
+</ul>
+<h3>安全：CI 本身就是攻擊面</h3>
+<ul>
+<li><strong>SAST / Secret Detection / Dependency Scanning</strong> 進 pipeline（見單元 4）。</li>
+<li>受保護變數（Protected）只在 main/protected 分支可用；一律 <code>masked</code>，且<strong>絕對不 echo</strong>。</li>
+<li>Runner 最小授權：Docker executor 只掛需要的 socket；不給 shell executor 跑任意權限。</li>
+</ul>
+
+<h2>站際比較對照表</h2>
+<table>
+<tr><th>面向</th><th>gitlab</th><th>github</th><th>markdown</th><th>yaml</th><th>json</th></tr>
+<tr><td>設定檔</td><td>.gitlab-ci.yml（單檔+include）</td><td>.github/workflows/*.yml（多檔）</td><td>—</td><td>兩者都是 YAML 語法</td><td>某些工具用 JSON 設定</td></tr>
+<tr><td>觸發</td><td>rules: if（隱含 push/MR）</td><td>on: push / pull_request / schedule</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>執行機器</td><td>自架 runner 為常見做法</td><td>hosted + self-hosted</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>產出傳遞</td><td>artifacts / cache</td><td>artifacts / cache</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>重複使用</td><td>include / CI component</td><td>reusable workflow / action</td><td>—</td><td>—</td><td>—</td></tr>
+</table>
+
+<h2>互動式檢核清單</h2>
+<div class="demo-block">
+  <div class="demo-label">進階驗收清單 · CHECKLIST</div>
+  <pre>- [ ] pipeline 全程 &lt; 10 分鐘（已用 cache + parallel + needs）
+- [ ] 測試涵蓋率門檻已設為 quality gate
+- [ ] SAST + Secret Detection 已啟用且能擋住含密鑰的 MR
+- [ ] 受保護變數已設，日誌中無任何 secret 洩漏
+- [ ] prod 部署有 environment + manual gate（手動才上）
+- [ ] 已用 glab ci status / ci view 實測過 pipeline</pre>
+</div>
+
 </div>
 <footer>這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>

@@ -281,6 +281,95 @@ jobs:
 <li><strong>混合平台策略設計：</strong>一家公司同時使用 GitHub（開源專案）與 GitLab（內部專案），設計一個「共用 CI 元件」的方案——如何把 GitLab 的 CI template 在兩個平台間共享使用。</li>
 </ol>
 
+<!-- ═══════ Round 2 Deepen ═══════ -->
+<h2>專案級端到端 Worked Example</h2>
+<h3>情境：雙平台並存遷移專案（hybrid-platform）</h3>
+<p>公司因資安法規把 12 個 repo 從 GitHub 遷到自架 GitLab，同時保留開源專案在 GitHub 對外曝光。這是「遷移 + 並用」的整站級專案，落地單元 8 的選型與遷移知識。</p>
+<div class="demo-block">
+  <div class="demo-label">專案檔案樹 · TREE</div>
+  <pre>hybrid-platform/
+├── README.md                       <span class="hl-c"># 遷移總計畫與狀態</span>
+├── migration/
+│   ├── inventory.csv               <span class="hl-c"># 12 個 repo：來源/目標/優先級</span>
+│   ├── ci-conversion/
+│   │   ├── actions-to-gitlab.md    <span class="hl-c"># 轉換對照手冊（單元 8 深入原理）</span>
+│   │   └── templates/              <span class="hl-c"># 共用 CI template（include 引用）</span>
+│   ├── scripts/
+│   │   ├── check-repos.sh          <span class="hl-c"># 遷移完整性檢查</span>
+│   │   └── update-remotes.sh       <span class="hl-c"># 批次更新 remote URL</span>
+│   └── docs/
+│       ├── decision-log.md         <span class="hl-c"># 選型決策紀錄（ADR）</span>
+│       └── runbook.md              <span class="hl-c"># 並用操作手冊</span>
+└── governance/
+    └── platform-policy.md          <span class="hl-c"># 什麼放 GitHub、什麼放 GitLab</span></pre>
+</div>
+<div class="demo-block">
+  <div class="demo-label">關鍵檔案 · KEY FILES</div>
+  <pre><span class="hl-c"># migration/inventory.csv（摘錄）</span>
+repo,from,to,priority,status
+web-app,github.com,gitlab.internal/web,high,done
+lib-shared,github.com,gitlab.internal/platform/lib,high,done
+open-source-tool,github.com,github.com/open/oss-tool,-,keep
+
+<span class="hl-c"># governance/platform-policy.md（摘錄）</span>
+放 GitLab（自架）：所有內部商業程式碼、CI 機密
+放 GitHub（公有）：開源專案、作品、社群入口
+禁止：將內部專案 fork 到個人 GitHub</pre>
+</div>
+<div class="demo-block">
+  <div class="demo-label">驗證命令與輸出 · VERIFY</div>
+  <pre>$ ./scripts/check-repos.sh
+[OK] 12/12 repos imported（issue/MR/label 齊全）
+[OK] 12/12 pipelines green on gitlab.internal
+[OK] 0 remotes still pointing to github.com（內部專案）
+[OK] 2 open-source repos 保留在 GitHub
+
+$ ./scripts/update-remotes.sh --dry-run
+web-app: github.com/org/web-app -&gt; gitlab.internal/web/web-app</pre>
+</div>
+<div class="callout"><strong>專案級收斂：</strong>「GitLab vs GitHub」的對照（單元 8）最後落地成兩樣東西：一份遷移計畫＋一份平台治理政策。選型不是課堂問答，是公司層級的決策與執行。</div>
+
+<h2>效能 / 品質 / 安全深度</h2>
+<h3>品質：遷移不是搬完就算</h3>
+<ul>
+<li><strong>驗收標準</strong>：issue/MR/label 完整、pipeline 全綠、webhook 重設、protected branches 重設。</li>
+<li><strong>CI 轉換</strong>：GitHub Actions → GitLab CI 的對照手冊＋共用 template，12 個 repo 用同一份設定，減少重工。</li>
+<li>分階段 rollout：先搬低風險 repo，跑一週再搬高風險——不是 Big Bang。</li>
+</ul>
+<h3>安全：合規的實務做法</h3>
+<ul>
+<li>「程式碼不出境」靠自架 GitLab：repo、CI、容器庫全部留在公司內網。</li>
+<li>遷移後<strong>全面重設權限</strong>，不沿用 GitHub 舊權限（有些人已離職）。</li>
+<li>機密重新入庫：GitHub Secrets 內容換成新的 GitLab CI Variables，舊 token 一律撤銷。</li>
+</ul>
+<h3>效能：雙平台並用的運維成本</h3>
+<ul>
+<li>兩套平台＝兩套帳號、兩套 CLI（gh/glab）、兩套通知——寫進 runbook，降低認知負荷。</li>
+<li>共用 CI 元件：GitLab 側用 CI include 共用設定；GitHub 側用 reusable workflow 對齊。</li>
+<li>定期稽核：掃描 remote URL，確保「該留 GitLab 的沒流出去」。</li>
+</ul>
+
+<h2>站際比較對照表</h2>
+<table>
+<tr><th>面向</th><th>gitlab</th><th>github</th><th>markdown</th><th>yaml</th><th>json</th></tr>
+<tr><td>核心定位</td><td>一體化 DevOps、可自架</td><td>社群生態、雲端優先</td><td>文件格式</td><td>設定格式</td><td>資料格式</td></tr>
+<tr><td>開源程度</td><td>CE 完整開源</td><td>平台閉源</td><td>開放標準</td><td>開放標準</td><td>開放標準</td></tr>
+<tr><td>CI/CD</td><td>內建、深度整合</td><td>Actions（市集驅動）</td><td>—</td><td>兩者皆 YAML 語法</td><td>—</td></tr>
+<tr><td>批准規則</td><td>免費且細</td><td>進階需付費</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>自架</td><td>CE 免費</td><td>Enterprise Server 付費</td><td>—</td><td>—</td><td>—</td></tr>
+</table>
+
+<h2>互動式檢核清單</h2>
+<div class="demo-block">
+  <div class="demo-label">進階驗收清單 · CHECKLIST</div>
+  <pre>- [ ] 已寫 ADR（decision-log）記錄選型理由與棄選項
+- [ ] 遷移後 12/12 repo 的 pipeline 全綠
+- [ ] 內部專案 0 個 remote 殘留 github.com
+- [ ] 權限已全面重設（不含已離職人員）
+- [ ] 舊 GitHub Secrets 已撤銷、新 GitLab Variables 就緒
+- [ ] platform-policy.md 明訂開源/內部放置規則並宣導</pre>
+</div>
+
 </div>
 <footer>這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>

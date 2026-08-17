@@ -217,6 +217,102 @@ Rule 2:  需要 1 人批准，限檔案 src/payments/**
 <li><strong>Merge Train 模擬：</strong>說明 Merge Train 的運作流程：假設同時有 5 顆 MR 排隊合併到 main，畫出「依序合併 + 互相測試」的序列圖，並比較它與「每顆 MR 各自等 pipeline」在時間效率上的差異。</li>
 </ol>
 
+<!-- ═══════ Round 2 Deepen ═══════ -->
+<h2>專案級端到端 Worked Example</h2>
+<h3>情境：合規金流平台 MR 專案（payments-platform）</h3>
+<p>處理付款的專案，MR 必須過「CI 全綠 + 2 人批准 + 討論全解決 + 金流路徑 CTO 批准 + 安全掃描無高風險」五重門檻。把單元 4 的 approval / 保護分支 / 合併方式與單元 6 的 CI 安全整合成一個專案。</p>
+<div class="demo-block">
+  <div class="demo-label">專案檔案樹 · TREE</div>
+  <pre>payments-platform/
+├── README.md                     <span class="hl-c"># 合併守則入口</span>
+├── .gitlab/
+│   └── merge_request_templates/
+│       └── compliance.md         <span class="hl-c"># 合規 MR 範本（含安全欄位）</span>
+├── .gitlab-ci.yml                <span class="hl-c"># 含 SAST + Secret Detection（單元 6）</span>
+├── src/
+│   ├── payments/                 <span class="hl-c"># 高風險路徑 → 需 CTO 批准</span>
+│   │   └── gateway.js
+│   └── web/
+│       └── app.js
+└── docs/
+    ├── approval-policy.md        <span class="hl-c"># 批准政策：哪條路徑誰批准</span>
+    └── merge-guidelines.md       <span class="hl-c"># 合併守則（squash 規定等）</span></pre>
+</div>
+<div class="demo-block">
+  <div class="demo-label">關鍵檔案 · KEY FILES</div>
+  <pre><span class="hl-c"># .gitlab-ci.yml（安全掃描段落，單元 6）</span>
+stages: [test, security, deploy]
+
+sast:
+  stage: security
+  image: docker:stable
+  variables: DOCKER_IMAGE: "registry.gitlab.com/gitlab-org/security-products/sast"
+  script: docker run --rm "$DOCKER_IMAGE" analyze .
+  artifacts: { reports: { sast: gl-sast-report.json } }
+
+secret_detection:
+  stage: security
+  script: docker run --rm "$SECRET_DETECTION_IMAGE" analyze .
+  artifacts: { reports: { secret_detection: gl-secret-detection-report.json } }
+
+<span class="hl-c"># Settings → Merge requests（對應的網頁設定）</span>
+✓ Pipelines must succeed       ✓ All discussions must resolve
+✓ 2 approvals required         ✓ src/payments/** → CTO 必須批准</pre>
+</div>
+<div class="demo-block">
+  <div class="demo-label">驗證命令與輸出 · VERIFY</div>
+  <pre>$ glab mr list --state opened
+!42  feat: 加入退款流程    source: feature/refund → target: main
+    ⚠ 1 approval missing · security scan pending
+
+$ glab mr approve 42              <span class="hl-c"># 第 2 位批准人簽署</span>
+✓ Approved
+
+$ glab ci status
+# Pipeline #318 on main (sha ab12cd3) · passed (build, test, sast, secret)</pre>
+</div>
+<div class="callout"><strong>專案級收斂：</strong>「審查（單元 4）+ 安全（單元 6）」合成一座自動化品質閘門：人類只管「批准」，機器管「綠燈＋掃描」——合規靠制度，不靠記憶。</div>
+
+<h2>效能 / 品質 / 安全深度</h2>
+<h3>品質：把 merge checks 當「合併契約」</h3>
+<ul>
+<li>合併契約＝pipeline 綠 + 批准數夠 + 討論全 resolve + 路徑專屬批准——任一不滿足，<code>Merge</code> 不亮。</li>
+<li><strong>Merge train</strong>：多顆 MR 排隊依序合併並互測，避免「各自通過、合起來壞掉」。</li>
+<li>squash commit message 用模板（<code>$TITLE</code> + MR 連結），讓歷史可回溯到審查。</li>
+</ul>
+<h3>安全：掃描自動化，漏洞擋在合併前</h3>
+<ul>
+<li><strong>SAST</strong> 抓程式碼漏洞（SQL injection、XSS 模式）；<strong>Secret Detection</strong> 抓硬編碼密鑰；<strong>Dependency Scanning</strong> 比對 CVE。</li>
+<li><strong>Push rules</strong>：拒絕 .env / *.pem / *.key 上傳——從源頭擋密鑰入庫。</li>
+<li>安全報告進 MR 的 Security 頁籤，合併門檻可設「無 high/critical 才能合併」。</li>
+</ul>
+<h3>效能：讓合併排隊自動化</h3>
+<ul>
+<li>Merge when pipeline succeeds：現在點合併，綠了才執行——不用人盯。</li>
+<li>Merge train 平行等待、依序測試，比「每顆 MR 各自等 pipeline」更省時間也更安全。</li>
+</ul>
+
+<h2>站際比較對照表</h2>
+<table>
+<tr><th>面向</th><th>gitlab</th><th>github</th><th>markdown</th><th>yaml</th><th>json</th></tr>
+<tr><td>批准規則</td><td>免費、依路徑/角色、很細</td><td>進階需付費（branch protection）</td><td>文件審閱標記</td><td>—</td><td>—</td></tr>
+<tr><td>討論管理</td><td>resolve thread 可追蹤</td><td>純留言串</td><td>註解/修訂記錄</td><td>—</td><td>—</td></tr>
+<tr><td>合併佇列</td><td>Merge train</td><td>Merge queue</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>安全掃描</td><td>內建 SAST / Secret Detection</td><td>付費 Advanced Security</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>合併方式</td><td>Merge / Squash / Rebase</td><td>Merge / Squash / Rebase</td><td>版本控制</td><td>—</td><td>—</td></tr>
+</table>
+
+<h2>互動式檢核清單</h2>
+<div class="demo-block">
+  <div class="demo-label">進階驗收清單 · CHECKLIST</div>
+  <pre>- [ ] 已設定依路徑的 approval rule（payments/** → CTO）
+- [ ] 已啟用 SAST + Secret Detection 並擋住高風險合併
+- [ ] 已設定 squash 合併與 commit message 模板
+- [ ] push rules 已拒絕 .env / *.pem / *.key
+- [ ] 實測過：少一個批准時 Merge 按鈕不亮
+- [ ] 新 commit 會重置批准狀態（已設定並驗證）</pre>
+</div>
+
 </div>
 <footer>這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>

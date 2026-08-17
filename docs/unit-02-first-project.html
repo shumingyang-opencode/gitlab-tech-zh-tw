@@ -208,6 +208,92 @@ sudo gitlab-runner register \
 <li><strong>從 GitHub 遷移到 GitLab：</strong>描述完整遷移步驟（含 Issues、MR、Label），並列出三個遷移後需要檢查的項目（CI 設定、Webhook、Protected Branches）。</li>
 </ol>
 
+<!-- ═══════ Round 2 Deepen ═══════ -->
+<h2>專案級端到端 Worked Example</h2>
+<h3>情境：新產品線群組建置專案（my-company）</h3>
+<p>公司成立「平台」與「產品」兩條產品線，需要一次建好群組樹、權限矩陣與 Visibility 策略，讓 20 人團隊各自安全進場。</p>
+<div class="demo-block">
+  <div class="demo-label">群組樹與專案 · GROUP TREE</div>
+  <pre>my-company/                    <span class="hl-c">← Group（Private）</span>
+├── platform/                  <span class="hl-c">← Subgroup：平台工程</span>
+│   ├── api-gateway/           <span class="hl-c">← Project（Private）</span>
+│   ├── user-service/          <span class="hl-c">← Project（Private）</span>
+│   └── shared-libs/           <span class="hl-c">← Project（Internal）</span>
+├── product/                   <span class="hl-c">← Subgroup：產品開發</span>
+│   ├── web-app/               <span class="hl-c">← Project（Private）</span>
+│   └── mobile-app/            <span class="hl-c">← Project（Private）</span>
+└── my-company.gitlab.io/      <span class="hl-c">← Project（Public）對外入口（單元 7）</span></pre>
+</div>
+<div class="demo-block">
+  <div class="demo-label">關鍵檔案 · KEY FILES</div>
+  <pre><span class="hl-c"># .gitignore（每個新專案起手式，防密鑰入庫）</span>
+.env
+*.pem
+*.key
+node_modules/
+dist/
+.DS_Store
+
+<span class="hl-c"># .gitlab-ci.yml（每個專案最基礎的 CI，單元 6）</span>
+stages: [test]
+hello:
+  stage: test
+  script: echo "Hello from $CI_PROJECT_PATH"</pre>
+</div>
+<div class="demo-block">
+  <div class="demo-label">驗證命令與輸出 · VERIFY</div>
+  <pre>$ git remote -v
+origin  git@gitlab.example.com:my-company/platform/api-gateway.git
+
+$ glab api "groups/my-company" 2&gt;/dev/null | head -c 300
+{"id":7,"name":"my-company","visibility":"private",...}
+
+$ git push -u origin main        <span class="hl-c"># 首次推送後，網頁看到 pipeline 綠燈</span>
+To gitlab.example.com:my-company/platform/api-gateway.git
+ * [new branch]      main -&gt; main</pre>
+</div>
+<div class="callout"><strong>專案級收斂：</strong>單元 2 的「Group / Subgroup / Visibility / 權限」在這裡變成一份群組樹＋一份權限矩陣——管理者照著建，20 人就能同時安全地進場工作。</div>
+
+<h2>效能 / 品質 / 安全深度</h2>
+<h3>效能：讓 repo 保持輕量</h3>
+<ul>
+<li><strong>clone 速度</strong>：大型二進位檔改用 Git LFS；設定檔案大小上限（push rule），防止有人推 500MB 的 log。</li>
+<li><strong>歷史瘦身</strong>：定期 <code>git gc</code>，必要時用 <code>git filter-repo</code> 清掉誤入的大檔與敏感檔。</li>
+<li><strong>避免單體巨庫</strong>：超過一個大型專案時用 Subgroup 拆成多個 Project，CI 與權限都好管理。</li>
+</ul>
+<h3>品質：專案標準化</h3>
+<ul>
+<li>每個新專案從「樣板」建立：README + LICENSE + CHANGELOG + .gitignore + 基礎 .gitlab-ci.yml 一次給齊。</li>
+<li>GitLab 專案樣板可直接選（Ruby/Node/Python 等），或自建群組樣板 <code>group/project-templates</code> 統一規範。</li>
+</ul>
+<h3>安全：權限最小化與可見性稽核</h3>
+<ul>
+<li><strong>權限矩陣</strong>：Owner 僅 2 人、Maintainer 各 Lead、Developer 開發者；Guest 只給需要看 issue 的外部人員。</li>
+<li><strong>Visibility 稽核</strong>：定期列出全部專案與 visibility，確認沒有誤設 Public 的內部專案。</li>
+<li><strong>Secret 防線</strong>：.gitignore + push rules 拒 .env/*.pem；密鑰一律走 CI/CD Variables。</li>
+</ul>
+
+<h2>站際比較對照表</h2>
+<table>
+<tr><th>面向</th><th>gitlab</th><th>github</th><th>markdown</th><th>yaml</th><th>json</th></tr>
+<tr><td>程式碼容器</td><td>Project（含 CI/Issues/Pages）</td><td>Repository（repo 為主）</td><td>.md 文件</td><td>.yml 設定</td><td>.json 資料</td></tr>
+<tr><td>組織單位</td><td>Group / Subgroup（巢狀）</td><td>Organization（單層）</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>可見性</td><td>Private / Internal / Public</td><td>Private / Public（無 Internal）</td><td>由平台檔案權限決定</td><td>同左</td><td>同左</td></tr>
+<tr><td>權限角色</td><td>Owner→Maintainer→Developer→Reporter→Guest</td><td>Owner→Admin→Write→Read</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>建立方式</td><td>New project + 樣板</td><td>New repository + 樣板</td><td>任何編輯器寫檔</td><td>任何編輯器寫檔</td><td>程式/編輯器產生</td></tr>
+</table>
+
+<h2>互動式檢核清單</h2>
+<div class="demo-block">
+  <div class="demo-label">進階驗收清單 · CHECKLIST</div>
+  <pre>- [ ] 已建立 Group + Subgroup，並畫出權限矩陣
+- [ ] 每個專案都有 README / LICENSE / CHANGELOG / .gitignore
+- [ ] visibility 全部核對：內部專案 Private、對外專案 Public
+- [ ] 用 Guest 帳號實測：讀不到 Private 專案、看得到 Internal 專案
+- [ ] repo 內無 .env / 憑證；密鑰全部在 CI Variables
+- [ ] 已 push 至少一個專案並看到 pipeline 綠燈</pre>
+</div>
+
 </div>
 <footer>這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>

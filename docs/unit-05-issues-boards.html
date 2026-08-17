@@ -215,6 +215,95 @@ Milestone: Sprint 2026-W34
 <li><strong>Epic 與 Milestone 的差異分析：</strong>用一個「開發新會員系統」的例子，說明 Epic（長期目標）與 Milestone（短期交付）如何搭配使用，並畫出兩者的層級關係圖。</li>
 </ol>
 
+<!-- ═══════ Round 2 Deepen ═══════ -->
+<h2>專案級端到端 Worked Example</h2>
+<h3>情境：敏捷交付管理專案（agile-delivery）</h3>
+<p>一個每兩週發一次的敏捷團隊，要把「issue 品質、label 詞彙、看板、里程碑、weight」標準化，讓 Sprint 可重複、可衡量。</p>
+<div class="demo-block">
+  <div class="demo-label">專案檔案樹 · TREE</div>
+  <pre>agile-delivery/
+├── README.md                     <span class="hl-c"># 團隊工作流總覽</span>
+├── .gitlab/
+│   └── issue_templates/
+│       ├── bug.md                <span class="hl-c"># 含步驟/預期/實際/環境</span>
+│       └── feature.md            <span class="hl-c"># 含 acceptance criteria</span>
+├── docs/
+│   ├── label-vocabulary.md       <span class="hl-c"># Label 詞彙表（type::/priority::/do::）</span>
+│   ├── board-guide.md            <span class="hl-c"># 看板使用指南（wip limit）</span>
+│   └── sprint-playbook.md        <span class="hl-c"># Sprint 流程手冊</span>
+└── data/
+    └── sprint-template.md        <span class="hl-c"># 每週 Sprint 開場模板</span></pre>
+</div>
+<div class="demo-block">
+  <div class="demo-label">關鍵檔案 · KEY FILES</div>
+  <pre><span class="hl-c"># docs/label-vocabulary.md（摘錄）</span>
+type::bug | type::feature | type::chore
+priority::high | ::medium | ::low
+do::1（待辦）do::2（進行中）review | done
+<span class="hl-c"># Scoped label：同字首只能一個，看板欄位自動對應</span>
+
+<span class="hl-c"># .gitlab/issue_templates/feature.md（摘錄）</span>
+## 使用者故事
+As a ..., I want to ..., so that ...
+## 驗收標準（Acceptance Criteria）
+- [ ] 具體可勾選的條件 1
+- [ ] 具體可勾選的條件 2</pre>
+</div>
+<div class="demo-block">
+  <div class="demo-label">驗證命令與輸出 · VERIFY</div>
+  <pre>$ glab issue list --label "do::2"          <span class="hl-c"># 進行中的工作</span>
+!102  修正登入 500        do::2  priority::high  weight 2
+!104  壓縮前端 bundle     do::2  priority::med   weight 3
+
+$ glab issue list --milestone "Sprint-14" --per-page 50 | wc -l
+6                       <span class="hl-c"># 里程碑總張數</span>
+
+$ glab issue list --milestone "Sprint-14" --state closed | wc -l
+4                       <span class="hl-c"># 已關閉張數 → 完成率 4/6</span></pre>
+</div>
+<div class="callout"><strong>專案級收斂：</strong>單元 5 的名詞（issue/label/milestone/board/weight/epic）在這裡變成「詞彙表 + 模板 + 手冊」——團隊照著用，站會看板就是最新事實，沒人需要人工統計。</div>
+
+<h2>效能 / 品質 / 安全深度</h2>
+<h3>品質：issue 品質決定可交付品質</h3>
+<ul>
+<li>模板強制「使用者故事 + 驗收標準」：做之前就知道「怎樣才算做完」。</li>
+<li>Bug 模板強制「步驟/預期/實際/環境」：可複現才算有效 issue。</li>
+<li>Definition of Done 寫進 sprint 手冊：合併 + 測試 + 文件 + 部署才算 done。</li>
+</ul>
+<h3>效能：看板紀律提升 throughput</h3>
+<ul>
+<li><strong>WIP limit</strong>：Doing 欄設上限，逼團隊「做完一件再做下一件」——WIP 是吞吐量的敵人。</li>
+<li>weight 讓分派不均與範圍膨脹現形：單張 weight 過大（如 5+）就拆細。</li>
+<li>用 <code>do::</code> scoped label 驅動看板，拖曳卡片＝改 label，狀態不靠人工維護。</li>
+</ul>
+<h3>安全：資訊最小暴露</h3>
+<ul>
+<li>Guest 只能開 issue 不能看程式碼——外部回報與內部程式碼隔離。</li>
+<li>敏感資訊（客戶名、帳密）不要寫進 issue 標題；需要時用加密工具傳。</li>
+<li>標籤與里程碑也有可見性：Private 群組的 issue 不會外流。</li>
+</ul>
+
+<h2>站際比較對照表</h2>
+<table>
+<tr><th>面向</th><th>gitlab</th><th>github</th><th>markdown</th><th>yaml</th><th>json</th></tr>
+<tr><td>任務單元</td><td>Issue（與 MR 深度整合）</td><td>Issue</td><td>文件中的任務清單</td><td>—</td><td>—</td></tr>
+<tr><td>看板</td><td>Issue Boards（label 驅動）</td><td>Projects（較輕量）</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>里程碑</td><td>Milestone（issue+MR 合計）</td><td>Milestone</td><td>版本說明文件</td><td>—</td><td>—</td></tr>
+<tr><td>標籤</td><td>Scoped labels（互斥）</td><td>Labels（無 scope）</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>工作量</td><td>weight（內建）</td><td>需第三方</td><td>—</td><td>—</td><td>—</td></tr>
+</table>
+
+<h2>互動式檢核清單</h2>
+<div class="demo-block">
+  <div class="demo-label">進階驗收清單 · CHECKLIST</div>
+  <pre>- [ ] 已定義 label 詞彙表並寫進 docs/（全員可查）
+- [ ] 每張 issue 都符合模板（故事/驗收或步驟/預期/實際）
+- [ ] Board 欄位與 label 對應，Doing 已設 wip limit
+- [ ] Milestone 已掛 issue + MR，進度自動計算
+- [ ] 已用 Epic 組織季度大目標
+- [ ] 實測：MR 合併後 issue 自動關閉、看板自動移動</pre>
+</div>
+
 </div>
 <footer>這是 GitLab 繁體中文教學站 · 由 OpenCode 建置<br>
   <span class="footer-license">本站教學內容（繁體中文解說）為本站原創，採 CC-BY-4.0；技術名詞與操作引用自 <a href="https://docs.gitlab.com/" rel="noopener">GitLab Docs</a> 與 <a href="https://git-scm.com/doc" rel="noopener">Git 官方文件</a>。</span></footer>
